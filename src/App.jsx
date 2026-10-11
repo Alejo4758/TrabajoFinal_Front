@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router';
 import Home from './pages/home/Home';
-import Login from './Pages/Login/Login';
+import Login from './pages/login/Login';
+import RegisterAT from './pages/registerAT/RegisterAT';
 
 export default function App () {
   return (
@@ -8,6 +9,7 @@ export default function App () {
       <Routes>
         <Route path='/' element={<Home/>}/>
         <Route path='/login' element={<Login/>}/>
+        <Route path='/registerAT' element={<RegisterAT/>}/>
       </Routes>
     </BrowserRouter>
   )
