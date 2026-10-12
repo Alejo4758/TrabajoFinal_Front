@@ -41,7 +41,7 @@ export default function Login () {
               ¿Todavía no tenés una cuenta?
             </p>
             <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-center">
-              <Link to="/registerSol" className="text-sm font-medium text-secondary hover:underline">
+              <Link to="/registerClient" className="text-sm font-medium text-secondary hover:underline">
                 Registrarme como solicitante
               </Link>
               <Link to="/registerAT" className="text-sm font-medium text-primary hover:underline">
