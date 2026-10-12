@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { registerClient } from "../../services/atServiceMock";
+import { registerClient } from "../../services/authService";
 import FormField from "../../components/FormField/FormField";
 
 export default function RegisterClient () {
   const navigate = useNavigate ();
 
-  const [form, setForm] = useState ({ name: "", lastName: "", email: "", password: "", confirmPassword: "" });
+  const [form, setForm] = useState ({ name: "", lastName: "", email: "", password: "", confirmPassword: "", documentType: "", documentNumber: "" });
   const [errors, setErrors] = useState ({});
   const [status, setStatus] = useState ({ type: "", message: "" });
   const [loading, setLoading] = useState (false);
@@ -45,8 +45,15 @@ export default function RegisterClient () {
     setLoading (true);
 
     try {
-      const { name, lastName, email, password } = form;
-      const result = await registerClient ({ name: name.trim (), lastName: lastName.trim (), email: email.trim(), password: password.trim () });
+      const { name, lastName, email, password, documentType, documentNumber } = form;
+      const result = await registerClient({ 
+        name: name.trim(), 
+        lastName: lastName.trim(), 
+        email: email.trim(), 
+        password: password.trim(),
+        documentType: documentType,
+        documentNumber: documentNumber.trim()
+      });
 
       if (result.status === 201) {
         setStatus ({ type: "success", message: "Tu cuenta fue creada correctamente" });

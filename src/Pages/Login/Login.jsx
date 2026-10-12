@@ -1,10 +1,48 @@
-import { Link } from 'react-router';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router'; // Asumiendo que usas react-router-dom para navegar
+import { login } from '../../services/authService';
 
 export default function Login () {
-  const handleSubmit = e => {
-    e.preventDefault ();
-    // Enviar las credenciales al backend
-    console.log('Login enviado');
+  const navigate = useNavigate();
+
+  // 1. Estados para capturar los inputs y manejar errores/carga
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null); // Limpiamos errores previos
+
+    try {
+      // 2. Llamamos a tu servicio pasándole el email y password
+      const responseData = await login(formData);
+      
+      // Si llega hasta aquí, el login fue exitoso (status 200)
+      console.log('Respuesta exitosa del backend:', responseData);
+
+      // Guardamos el token en localStorage para mantener la sesión
+      localStorage.setItem('token', responseData.token);
+      localStorage.setItem('user', JSON.stringify(responseData.user));
+
+      // Redirigimos al usuario (cambia '/dashboard' por tu ruta real)
+      navigate('/dashboard'); 
+
+    } catch (err) {
+      // Si el backend tira error (ej: 401 Credenciales inválidas o 403 Falta confirmar email)
+      console.error('Fallo el login:', err.message);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -20,20 +58,54 @@ export default function Login () {
         </div>
         <section className="rounded-xl border border-border bg-surface p-6 shadow-card sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
+            
+            {/* 3. Bloque visual para mostrar el error del backend */}
+            {error && (
+              <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 border border-red-200 text-center">
+                {error}
+              </div>
+            )}
+
             <div>
               <label htmlFor="email" className="mb-2 block text-sm font-medium text-text">
                 Correo electrónico
               </label>
-              <input id="email" name="email" type="email" autoComplete="email" required placeholder="ejemplo@correo.com" className="w-full rounded-md border border-border bg-surface px-4 py-3 text-text placeholder:text-text-muted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"/>
+              <input 
+                id="email" 
+                name="email" 
+                type="email" 
+                autoComplete="email" 
+                required 
+                placeholder="ejemplo@correo.com" 
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full rounded-md border border-border bg-surface px-4 py-3 text-text placeholder:text-text-muted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
             </div>
             <div>
               <label htmlFor="password" className="mb-2 block text-sm font-medium text-text">
                 Contraseña
               </label>
-              <input id="password" name="password" type="password" autoComplete="current-password" required placeholder="Ingresá tu contraseña" className="w-full rounded-md border border-border bg-surface px-4 py-3 text-text placeholder:text-text-muted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"/>
+              <input 
+                id="password" 
+                name="password" 
+                type="password" 
+                autoComplete="current-password" 
+                required 
+                placeholder="Ingresá tu contraseña" 
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full rounded-md border border-border bg-surface px-4 py-3 text-text placeholder:text-text-muted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
             </div>
-            <button type="submit" className="w-full rounded-md bg-primary px-4 py-3 font-medium text-white transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/30">
-              Iniciar sesión
+            <button 
+              type="submit" 
+              disabled={isLoading}
+              className={`w-full rounded-md px-4 py-3 font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+                isLoading ? 'bg-primary/70 cursor-not-allowed' : 'bg-primary hover:bg-primary-hover'
+              }`}
+            >
+              {isLoading ? 'Conectando...' : 'Iniciar sesión'}
             </button>
           </form>
           <div className="mt-6 border-t border-border pt-6 text-center">

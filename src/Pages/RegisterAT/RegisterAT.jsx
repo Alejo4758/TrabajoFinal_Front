@@ -4,7 +4,7 @@ import { registerAT } from "../../services/atServiceMock";
 import FormField from "../../components/FormField/FormField";
 
 export default function RegisterAT () {
-  const [form, setForm] = useState ({ name: "", lastName: "", dateOfBirth: "", documentType: "", documentNumber: "", email: "", password: "", confirmPassword: "" });
+  const [form, setForm] = useState ({ name: "", lastName: "", dateOfBirth: "", documentType: "", documentNumber: "", email: "", password: "", confirmPassword: "", rol: "AT" });
   const [status, setStatus] = useState ({ type: '', message: '' });
   const [credentials, setCredentials] = useState (null);
   const [loading, setLoading] = useState (false);

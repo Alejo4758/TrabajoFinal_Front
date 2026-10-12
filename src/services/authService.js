@@ -1,4 +1,40 @@
-const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace (/\/+$/, "");
+
+export const login = async credentials => {
+  const response = await fetch (`${BASE_URL}/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify ({
+      email: credentials.email.trim (),
+      password: credentials.password,
+    }),
+  });
+
+  const responseText = await response.text ();
+  let responseBody = null;
+
+  if (responseText) {
+    try {
+      responseBody = JSON.parse (responseText);
+    }
+    catch {
+      responseBody = null;
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error (
+      responseBody?.message
+      || responseBody?.error
+      || responseText
+      || `Error de autenticación: ${response.status}`
+    );
+  }
+
+  return responseBody;
+};
 
 export const registerAT = async (form, credentials) => {
   if (!BASE_URL) return { status: null, data: null, error: "La URL de la API no está configurada" };
@@ -36,10 +72,10 @@ export const registerAT = async (form, credentials) => {
 export const registerClient = async form => {
   if (!BASE_URL) return { status: null, data: null, error: "La URL de la API no está configurada" };
 
-  const body = { name: form.name, lastName: form.lastName, email: form.email, password: form.password };
+  const body = { name: form.name, lastName: form.lastName, email: form.email, password: form.password, documentType: form.documentType, documentNumber: form.documentNumber };
 
   try {
-    const response = await fetch (`${BASE_URL}/auth/register-client`, { // CAMBIAR POR EL ENDPOINT REAL DEL BACK
+    const response = await fetch (`${BASE_URL}/auth/register`, { // CAMBIAR POR EL ENDPOINT REAL DEL BACK
       method: "POST",
       headers: {
         "Content-Type": "application/json",
