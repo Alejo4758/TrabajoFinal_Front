@@ -34,7 +34,7 @@ export default function Login () {
       localStorage.setItem('user', JSON.stringify(responseData.user));
 
       // Redirigimos al usuario (cambia '/dashboard' por tu ruta real)
-      navigate('/dashboard'); 
+      navigate('/searchAT'); 
 
     } catch (err) {
       // Si el backend tira error (ej: 401 Credenciales inválidas o 403 Falta confirmar email)
