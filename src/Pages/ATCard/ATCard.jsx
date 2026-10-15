@@ -1,4 +1,6 @@
-export default function ATCard ({ name = "", lastName = "", dateOfBirth = "", locality = [], image = "", specialties = [], socialPrograms = [], availabilityHours = "A convenir" }) {    
+import { Link } from "react-router";
+
+export default function ATCard ({ id, name = "", lastName = "", dateOfBirth = "", locality = [], image = "", specialties = [], socialPrograms = [], availabilityHours = "A convenir" }) {    
     const calculateAge = dateOfBirth => {
         if (!dateOfBirth) return "--";
         const today = new Date ();
@@ -57,10 +59,13 @@ export default function ATCard ({ name = "", lastName = "", dateOfBirth = "", lo
                 <p className="text-sm font-medium text-text">{availabilityHours}</p>
             </section>           
             <div className="mt-auto border-t border-border pt-4">
-                <button className="cursor-pointer w-full rounded-xl border border-primary px-4 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-primary/30">
-                    Ver perfil
-                </button>
-            </div>
+    <Link 
+        to={`/profileAT/at/${id}`} // <-- Agrega 'id' a las props que recibe ATCard
+        className="flex justify-center w-full rounded-xl border border-primary px-4 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white"
+    >
+        Ver perfil
+    </Link>
+</div>
         </article>
     );
 }
