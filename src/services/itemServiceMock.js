@@ -20,6 +20,28 @@ const MOCK_ATS = [
         specialties: ["Adultos", "Discapacidad"],
         socialPrograms: ["IPROSS"],
         availabilityHours: "Lunes a viernes, de 14 a 18 hs.",
+        experiences: [
+            {
+                id: 1,
+                title: "Acompañante terapéutico en inclusión escolar",
+                startDate: "2022-03-01T00:00:00.000Z",
+                finishDate: "2024-12-01T00:00:00.000Z",
+                description: "Acompañamiento a niños en el ámbito escolar, favoreciendo su integración con el grupo, la autonomía en las actividades cotidianas y la participación en las propuestas pedagógicas, en articulación con docentes y el equipo terapéutico.",
+            },
+            {
+                id: 2,
+                title: "Acompañante terapéutico en consultorio",
+                startDate: "2025-02-01T00:00:00.000Z",
+                finishDate: null,
+                description: "Acompañamiento individual orientado al desarrollo de habilidades sociales, la organización de rutinas y el fortalecimiento de la autonomía. Registro periódico de observaciones y seguimiento de los objetivos establecidos junto al equipo profesional.",},
+            {
+                id: 3,
+                title: "Prácticas de acompañamiento en institución",
+                startDate: "2021-04-01T00:00:00.000Z",
+                finishDate: "2021-11-30T00:00:00.000Z",
+                description: "Participación en actividades de acompañamiento y observación, colaborando en la planificación de actividades recreativas y en el seguimiento de las pautas definidas por los profesionales responsables.",
+            },
+        ],
     },
     {
         id: 3,
