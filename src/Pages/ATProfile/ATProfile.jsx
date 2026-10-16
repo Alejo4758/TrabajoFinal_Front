@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { getATById } from '../../services/itemServiceMock';
+import { getATById } from '../../services/itemsService';
 
 export default function ATProfile () {
     const { id } = useParams ();
