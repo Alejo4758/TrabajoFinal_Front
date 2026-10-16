@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace (/\/+$/, "");
 
 export const getATs = async (page = 1, limit = 10, filters = {}) => {
     try {
@@ -9,7 +9,7 @@ export const getATs = async (page = 1, limit = 10, filters = {}) => {
 
         if (filters.locality) {
             url.searchParams.append ("locality", filters.locality);
-        }
+        }   
         if (filters.specialties) {
             url.searchParams.append ("specialties", filters.specialties);
         }

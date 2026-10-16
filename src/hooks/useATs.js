@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router";
-import { getATs } from "../services/itemServiceMock";
+import { getATs } from "../services/itemsService";
 
 const ATS_PER_PAGE = 9;
 
