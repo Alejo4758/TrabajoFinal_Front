@@ -3,7 +3,7 @@ import Home from './pages/home/Home';
 import Login from './Pages/Login/Login';
 import RegisterAT from './pages/registerAT/RegisterAT';
 import RegisterClient from './pages/RegisterClient/RegisterClient';
-import ATSearchPage from './pages/ATSearch/ATSearch';
+import ATSearch from './pages/ATSearch/ATSearch';
 import ATProfile from './pages/ATProfile/ATProfile';
 
 export default function App () {
@@ -14,7 +14,7 @@ export default function App () {
         <Route path='/login' element={<Login/>}/>
         <Route path='/registerAT' element={<RegisterAT/>}/>
         <Route path='/registerClient' element={<RegisterClient/>}/>
-        <Route path='/searchAT' element={<ATSearchPage/>}/>
+        <Route path='/searchAT' element={<ATSearch/>}/>
         <Route path='/profileAT/at/:id' element={<ATProfile/>}/>
       </Routes>
     </BrowserRouter>
