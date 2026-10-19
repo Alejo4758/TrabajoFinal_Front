@@ -123,14 +123,14 @@ export default function Login () {
                     error={fieldErrors.password}
                     icon={<Icon name="lock"/>}
                     rightSlot={
-                      <button type="button" onClick={() => setShowPassword(v => !v)} className="rounded-lg px-3 py-1.5 text-sm font-medium text-primary transition hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/30">
+                      <button type="button" onClick={() => setShowPassword(v => !v)} className="cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium text-primary transition hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/30">
                         {showPassword ? 'Ocultar' : 'Mostrar'}
                       </button>
                     }
                   />
                 </div>
                 <button type="submit" disabled={isLoading}
-                  className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 font-semibold text-white shadow-lg shadow-primary/20 transition focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+                  className={`cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 font-semibold text-white shadow-lg shadow-primary/20 transition focus:outline-none focus:ring-2 focus:ring-primary/30 ${
                     isLoading ? 'cursor-not-allowed bg-primary/70' : 'bg-primary hover:-translate-y-0.5 hover:bg-primary-hover'
                   }`}
                 >
