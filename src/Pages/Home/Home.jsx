@@ -1,13 +1,6 @@
 import { Link } from "react-router";
-import { ICONS, AT_FEATURES, USER_FEATURES } from "../../utils/constants";
-
-function Icon ({ name, className = "h-5 w-5" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d={ICONS[name]}/>
-    </svg>
-  );
-}
+import { AT_FEATURES, USER_FEATURES } from "../../utils/constants";
+import Icon from "../../components/Icon/Icon";
 
 function BrandMark({ className = "h-11 w-11" }) {
   return (
