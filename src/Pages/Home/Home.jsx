@@ -1,81 +1,152 @@
-import { Link } from 'react-router';
+import { Link } from "react-router";
+import { ICONS, AT_FEATURES, USER_FEATURES } from "../../utils/constants";
 
-export default function Home() {
+function Icon ({ name, className = "h-5 w-5" }) {
   return (
-    <main className="min-h-screen bg-background font-sans">
-      <div className="mx-auto flex min-h-screen w-full max-w-4xl flex-col justify-center px-6 py-10">
-        <header className="mb-8 text-center">
-          <h1 className="m-0 font-serif text-4xl font-bold text-text sm:text-5xl">
-            RedAT
-          </h1>
-          <p className="m-0 mt-3 text-base leading-6 text-text-secondary sm:text-lg">
-            Gestión y conexión para el acompañamiento terapéutico
-          </p>
-        </header>
-        <section className="rounded-xl border border-border bg-surface p-6 shadow-card sm:p-8">
-          <div className="mx-auto max-w-xl">
-            <div className="text-center">
-              <h2 className="m-0 text-xl font-semibold text-text sm:text-2xl">
-                Ingresa a tu cuenta
-              </h2>
-              <p className="m-0 mt-2 text-sm text-text-secondary">
-                Accedé a tu espacio de trabajo para continuar.
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d={ICONS[name]}/>
+    </svg>
+  );
+}
+
+function BrandMark({ className = "h-11 w-11" }) {
+  return (
+    <div
+      className={`flex ${className} items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20`}
+    >
+      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+        <path d="M12 6 6.5 17M12 6l5.5 11M6.5 17h11" opacity=".7" />
+        <circle cx="12" cy="6" r="2.4" fill="currentColor" />
+        <circle cx="6.5" cy="17" r="2.4" fill="currentColor" />
+        <circle cx="17.5" cy="17" r="2.4" fill="currentColor" />
+      </svg>
+    </div>
+  );
+}
+
+function FeaturePanel ({ description, title, items, highlighted }) {
+  return (
+    <div className={`rounded-3xl border p-6 sm:p-8 ${highlighted ? "border-primary/15 bg-primary/5" : "border-border bg-surface/60"}`}>
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+        {description}
+      </p>
+      <h3 className="mt-3 text-2xl font-bold tracking-tight text-text">
+        {title}
+      </h3>
+      <ul className="mt-6 space-y-4">
+        {items.map (item => (
+          <li key={item.title} className="flex gap-4 rounded-2xl border border-border bg-surface p-5">
+            <div className={`flex h-11 w-11 flex-none items-center justify-center rounded-xl ${ highlighted ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-primary/10 text-primary"}`}>
+              <Icon name={item.icon} className="h-5 w-5"/>
+            </div>
+            <div>
+              <h4 className="font-bold text-text">
+                {item.title}
+              </h4>
+              <p className="text-pretty mt-1.5 text-sm leading-relaxed text-text-secondary">
+                {item.text}
               </p>
             </div>
-            <Link to="/login" className="mt-5 flex w-full items-center justify-center rounded-md bg-text px-4 py-3 font-medium text-white shadow-sm transition-colors hover:bg-text-secondary">
-              Iniciar Sesión
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function RoleCard ({ title, description, detail, to, cta, icon, featured }) {
+  return (
+    <Link to={to} className={`group flex h-full flex-col rounded-3xl border p-7 transition-all duration-300 hover:-translate-y-1 sm:p-8 ${featured ? "border-primary bg-primary text-white shadow-xl shadow-primary/20" : "border-border bg-surface hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5"}`}>
+      <div className="flex items-start justify-between">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${featured ? "bg-white/15 text-white" : "bg-primary/10 text-primary"}`}>
+          <Icon name={icon} className="h-6 w-6"/>
+        </div>
+        <div className={`rounded-full border p-2 transition-all duration-300 group-hover:translate-x-1 ${featured ? "border-white/40" : "border-border text-text-secondary group-hover:border-primary group-hover:bg-primary group-hover:text-white"}`}>
+          <Icon name="arrow"/>
+        </div>
+      </div>
+      <p className={`mt-7 text-xs font-semibold uppercase tracking-[0.16em] ${featured ? "text-white/80" : "text-primary"}`}>
+        {detail}
+      </p>
+      <h3 className="mt-2 text-xl font-bold sm:text-2xl">
+        {title}
+      </h3>
+      <p className={`mt-3 flex-1 text-sm leading-relaxed ${featured ? "text-white/85" : "text-text-secondary"}`}>
+        {description}
+      </p>
+      <p className="mt-6 text-sm font-semibold">
+        {cta}
+      </p>
+    </Link>
+  );
+}
+
+export default function Home () {
+  return (
+    <main className="relative min-h-screen overflow-hidden bg-background font-sans">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <nav className="flex items-center justify-between py-5">
+          <Link to="/" className="flex items-center gap-3">
+            <BrandMark/>
+            <div>
+              <span className="block text-xl font-extrabold tracking-tight text-text">RedAT</span>
+              <span className="hidden text-[11px] tracking-wide text-text-secondary sm:block">Red de Acompañamiento Terapéutico</span>
+            </div>
+          </Link>
+          <div className="flex items-center gap-3">
+            <span className="hidden text-sm text-text-secondary md:inline">¿Ya tenés una cuenta?</span>
+            <Link to="/login" className="rounded-xl border border-border bg-surface px-5 py-2.5 text-sm font-semibold text-text transition-colors hover:border-primary hover:text-primary">
+              Iniciar sesión
             </Link>
           </div>
-          <div className="my-8 flex items-center gap-4">
-            <div className="flex-1 border-t border-border"/>
-            <span className="m-0 whitespace-nowrap text-xs font-medium text-text-muted sm:text-sm">
-              O registrate como nuevo usuario
-            </span>
-            <div className="flex-1 border-t border-border"/>
+        </nav>
+        <section className="mx-auto max-w-4xl py-20 sm:py-28 lg:py-32">
+          <div className="text-center">
+            <h2 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-text sm:text-6xl lg:text-7xl">
+              Conectar para
+              <span className="relative mx-auto mt-1 block w-fit text-primary">
+                acompañar mejor
+                <svg className="absolute -bottom-4 left-0 h-2 w-full text-secondary/60" viewBox="0 0 200 8" preserveAspectRatio="none" fill="none" aria-hidden="true">
+                  <path d="M2 5c40-4 100-4 196 0" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+                </svg>
+              </span>
+            </h2>
+            <p className="mx-auto mt-8 max-w-2xl text-base leading-8 text-text-secondary sm:text-lg">
+              Un espacio para acercar a quienes necesitan acompañamiento terapéutico con los profesionales que lo brindan, y facilitarles a estos la organización de cada proceso
+            </p>
+            <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link to="/registerClient" className="group inline-flex items-center justify-center gap-3 rounded-xl bg-primary px-7 py-4 font-semibold text-white shadow-lg shadow-primary/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
+                Busco acompañamiento
+              </Link>
+              <Link to="/registerAT" className="inline-flex items-center justify-center rounded-xl border border-border bg-surface px-7 py-4 font-semibold text-text transition-colors hover:border-primary/50 hover:text-primary">
+                Soy profesional AT
+              </Link>
+            </div>
           </div>
-          <div>
-            <div className="text-center">
-              <h2 className="m-0 text-xl font-semibold text-text sm:text-2xl">
-                ¿Cómo vas a utilizar RedAT?
-              </h2>
-              <p className="m-0 mt-2 text-sm text-text-secondary">
-                Seleccioná la opción que corresponda a tu necesidad.
-              </p>
-            </div>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <Link to="/registerClient" className="group flex min-h-55 flex-col items-center justify-center rounded-lg border-2 border-border p-6 text-center transition-all duration-300 hover:border-secondary hover:bg-surface-alt">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary-light text-secondary transition-transform duration-300 group-hover:scale-110">
-                  <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                  </svg>
-                </div>
-                <h3 className="m-0 mt-4 text-lg font-semibold text-text">
-                  Familiar / Paciente
-                </h3>
-                <p className="m-0 mt-2 max-w-xs text-sm leading-5 text-text-secondary">
-                  Busco contratar un profesional para acompañamiento terapéutico.
-                </p>
-                <span className="mt-4 text-sm font-medium text-secondary">
-                  Crear cuenta
-                </span>
-              </Link>
-              <Link to="/registerAT" className="group flex min-h-55 flex-col items-center justify-center rounded-lg border-2 border-border p-6 text-center transition-all duration-300 hover:border-primary hover:bg-surface-alt">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-light text-primary transition-transform duration-300 group-hover:scale-110">
-                  <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                  </svg>
-                </div>
-                <h3 className="m-0 mt-4 text-lg font-semibold text-text">
-                  Profesional AT
-                </h3>
-                <p className="m-0 mt-2 max-w-xs text-sm leading-5 text-text-secondary">
-                  Ofrecé tus servicios y gestioná tus acompañamientos desde RedAT.
-                </p>
-                <span className="mt-4 text-sm font-medium text-primary">
-                  Crear cuenta
-                </span>
-              </Link>
-            </div>
+        </section>
+        <section className="border-t border-border py-16">
+          <div className="mx-auto mb-12 max-w-2xl text-center">
+            <h2 className="text-pretty mt-3 text-3xl font-bold tracking-tight text-text sm:text-4xl">
+              Todo el acompañamiento, en un solo lugar
+            </h2>
+          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <FeaturePanel description="Para quien busca acompañamiento" title="Encontrá al profesional indicado" items={USER_FEATURES}/>
+            <FeaturePanel highlighted description="Para acompañantes terapéuticos" title="Gestioná cada acompañamiento" items={AT_FEATURES}/>
+          </div>
+        </section>
+        <section className="border-t border-border py-16">
+          <div className="mx-auto mb-10 max-w-2xl text-center">
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-text sm:text-4xl">
+              ¿Cómo querés formar parte de RedAT?
+            </h2>
+            <p className="mt-3 text-text-secondary">
+              Elegí el perfil que mejor se adapte a lo que necesitás
+            </p>
+          </div>
+          <div className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2">
+            <RoleCard featured icon="users" detail="Para familias y pacientes" title="Busco un acompañante terapéutico" description="Explorá perfiles profesionales y encontrá opciones que se ajusten a tus necesidades de acompañamiento" to="/registerClient" cta="Crear cuenta"/>
+            <RoleCard icon="user" detail="Para acompañantes terapéuticos" title="Quiero ofrecer mis servicios como AT" description="Creá tu perfil profesional para presentar tu experiencia y gestionar el tratamiento" to="/registerAT" cta="Crear perfil profesional"/>
           </div>
         </section>
       </div>
