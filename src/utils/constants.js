@@ -10,6 +10,8 @@ export const ICONS = {
   plan: "M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 3h6v4H9V3Zm0 11 2 2 4-4",
   chart: "M4 20h16M7 20v-7m5 7V6m5 14v-10",
   edit: "M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Zm9-13 4 4",
+  mail: 'M4 6h16v12H4V6Zm0 1 8 6 8-6',
+  lock: 'M6 11V8a6 6 0 0 1 12 0v3M5 11h14v9H5v-9Z',
 };
 
 export const AT_FEATURES = [
@@ -23,3 +25,11 @@ export const USER_FEATURES = [
   { icon: "shield", title: "Perfiles validados", text: "Un administrador revisa la documentación de cada acompañante antes de que pueda aparecer en la búsqueda" },
   { icon: "chat", title: "Chat integrado", text: "Si el acompañante acepta tu solicitud, conversan dentro de la plataforma para acordar pautas y coordinar actividades" }
 ];
+
+export const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*\.[A-Za-z]{2,}$/;
+
+export const ROLE_ROUTES = {
+  CLIENT: "/searchAT",
+  AT: "/ruta-del-at",
+};
+export const DEFAULT_ROUTE = "/";
