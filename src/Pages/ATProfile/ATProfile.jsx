@@ -5,32 +5,16 @@ import { getATById } from '../../services/itemsService';
 export default function ATProfile () {
     const { id } = useParams ();
 
-    const navigate = useNavigate();
+    const navigate = useNavigate ();
     
     const [at, setAt] = useState (null);
     const [loading, setLoading] = useState (true);
     const [error, setError] = useState (null);
 
-    const calculateAge = dateOfBirth => {
-        if (!dateOfBirth) return "--";
-        const today = new Date ();
-        const birth = new Date (`${dateOfBirth}T00:00:00`);
-        let age = today.getFullYear () - birth.getFullYear ();
-        if (today.getMonth () < birth.getMonth () || (today.getMonth () === birth.getMonth () && today.getDate () < birth.getDate ())) age--;
-        return age;
-    };
-
-    const formatMonthYear = dateString => {
-        if (!dateString) return "Actualidad";
-        const date = new Date (dateString);
-        return date.toLocaleDateString ('es-AR', { month: 'short', year: 'numeric' }).replace ('.', '');
-    };
-
     useEffect(() => {
         const fetchProfessional = async () => {
             setLoading (true);
-            const { data, error } = await getATById (id);
-            
+            const { data, error } = await getATById (id);            
             if (error) {
                 setError (error);
             } else {
@@ -85,20 +69,26 @@ export default function ATProfile () {
     return (
         <main className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8 font-sans">
             <div className="mx-auto max-w-6xl">
-                <button className="mb-8 text-sm font-bold text-text-secondary hover:text-primary transition-colors cursor-pointer w-fit" onClick={() => navigate (-1)}> 
+                <button className="mb-8 text-sm font-bold text-text-secondary hover:text-primary transition-colors cursor-pointer w-fit" onClick={() => navigate ("/searchAT")}> 
                     Volver a la búsqueda
                 </button>
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     <section className="lg:col-span-4">
                         <div className="sticky top-8 rounded-3xl border border-border bg-surface p-6 shadow-sm flex flex-col items-center text-center">
                             <img className="w-36 h-36 rounded-full border-4 border-primary/10 object-cover mb-4" src={profileImage} alt={`Foto de ${at.name}`}/>
-                            <h2 className="text-2xl font-bold text-text">{at.name} {at.lastName}</h2>
-                            <p className="text-text-secondary font-medium mb-6">{calculateAge (at.dateOfBirth)} años</p>
+                            <h2 className="text-2xl font-bold text-text">
+                                {at.name} {at.lastName}
+                            </h2>
+                            <p className="text-text-secondary font-medium mb-6">
+                                {calculateAge (at.dateOfBirth)} años
+                            </p>
                             <button className="w-full cursor-pointer rounded-xl bg-primary px-4 py-3.5 font-semibold text-white transition-all hover:bg-primary/90 hover:shadow-md mb-8">
                                 Solicitar Entrevista
                             </button>
                             <div className="w-full space-y-4 text-left border-t border-border pt-6">
-                                <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-2">Zona de Trabajo</h3>
+                                <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-2">
+                                    Zona de Trabajo
+                                </h3>
                                     <div className="flex flex-wrap gap-2">
                                         {at.locality.map (loc => (
                                             <span key={loc} className="inline-flex items-center text-sm text-text bg-background border border-border rounded-md px-2.5 py-1">
@@ -108,9 +98,11 @@ export default function ATProfile () {
                                         ))}
                                     </div>
                                 <div>
-                                    <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-2 mt-4">Disponibilidad</h3>
+                                    <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-2 mt-4">
+                                        Disponibilidad
+                                    </h3>
                                     <p className="text-sm text-text bg-background border border-border rounded-md px-3 py-2">
-                                        {at.availabilityHours}
+                                        {at.availabilityHours || "A convenir"}
                                     </p>
                                 </div>
                             </div>
@@ -118,10 +110,14 @@ export default function ATProfile () {
                     </section>
                     <div className="lg:col-span-8 space-y-8">
                         <section className="rounded-3xl border border-border bg-surface p-6 sm:p-8 shadow-sm">
-                            <h2 className="text-xl font-bold text-text mb-6 border-b border-border pb-4">Especialidades y Cobertura</h2>
+                            <h2 className="text-xl font-bold text-text mb-6 border-b border-border pb-4">
+                                Especialidades y Cobertura
+                            </h2>
                             <div className="grid sm:grid-cols-2 gap-8">
                                 <div>
-                                    <h3 className="text-sm font-semibold text-text mb-3">Se especializa en:</h3>
+                                    <h3 className="text-sm font-semibold text-text mb-3">
+                                        Se especializa en:
+                                    </h3>
                                     <div className="flex flex-wrap gap-2">
                                         {at.specialties.map (specialty => (
                                             <span className="rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary" key={specialty}>
@@ -131,7 +127,9 @@ export default function ATProfile () {
                                     </div>
                                 </div>
                                 <div>   
-                                    <h3 className="text-sm font-semibold text-text mb-3">Obras Sociales aceptadas:</h3>
+                                    <h3 className="text-sm font-semibold text-text mb-3">
+                                        Obras Sociales aceptadas:
+                                    </h3>
                                     <div className="flex flex-wrap gap-2">
                                         {at.socialPrograms.map (program => (
                                             <span key={program} className="rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
@@ -143,14 +141,18 @@ export default function ATProfile () {
                             </div>
                         </section>
                         <section className="rounded-3xl border border-border bg-surface p-6 sm:p-8 shadow-sm">
-                            <h2 className="text-xl font-bold text-text mb-8 border-b border-border pb-4">Experiencia Profesional</h2>
+                            <h2 className="text-xl font-bold text-text mb-8 border-b border-border pb-4">
+                                Experiencia Profesional
+                            </h2>
                             {at.experiences && at.experiences.length > 0 ? (
                                 <div className="relative border-l-2 border-primary/20 ml-3 space-y-10">
                                     {at.experiences.map (exp => (
                                         <div className="relative pl-6 sm:pl-8" key={exp.id}>
                                             <span className="absolute -left-2.25 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary ring-4 ring-surface"></span>
                                             <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between mb-2">
-                                                <h3 className="text-lg font-bold text-text leading-snug">{exp.title}</h3>
+                                                <h3 className="text-lg font-bold text-text leading-snug">
+                                                    {exp.title}
+                                                </h3>
                                                 <span className="text-sm font-medium text-primary bg-primary/10 px-2.5 py-0.5 rounded-md mt-1 sm:mt-0 w-fit">
                                                     {formatMonthYear (exp.startDate)} - {formatMonthYear (exp.finishDate)}
                                                 </span>
@@ -165,7 +167,9 @@ export default function ATProfile () {
                                 </div>
                             ) : (
                                 <div className="text-center py-8">
-                                    <p className="text-text-secondary">Este perfil aún no ha cargado experiencia profesional.</p>
+                                    <p className="text-text-secondary">
+                                        Este perfil aún no ha cargado experiencia profesional.
+                                    </p>
                                 </div>
                             )}
                         </section>
