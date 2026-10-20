@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { getATById } from '../../services/itemsService';
+import { calculateAge, formatMonthYear, formatAvailability } from '../../utils/utils';
 
 export default function ATProfile () {
     const { id } = useParams ();
@@ -83,7 +84,7 @@ export default function ATProfile () {
                                 {calculateAge (at.dateOfBirth)} años
                             </p>
                             <button className="w-full cursor-pointer rounded-xl bg-primary px-4 py-3.5 font-semibold text-white transition-all hover:bg-primary/90 hover:shadow-md mb-8">
-                                Solicitar Entrevista
+                                Solicitar vinculación
                             </button>
                             <div className="w-full space-y-4 text-left border-t border-border pt-6">
                                 <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-2">
@@ -102,7 +103,7 @@ export default function ATProfile () {
                                         Disponibilidad
                                     </h3>
                                     <p className="text-sm text-text bg-background border border-border rounded-md px-3 py-2">
-                                        {at.availabilityHours || "A convenir"}
+                                        {formatAvailability (at.availability) || "A convenir"}
                                     </p>
                                 </div>
                             </div>
