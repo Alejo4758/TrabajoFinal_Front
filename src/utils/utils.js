@@ -1,3 +1,5 @@
+ import { DAYS_OF_WEEK } from "./constants";
+ 
  export const calculateAge = dateOfBirth => {
     if (!dateOfBirth) return "--";        
     const birth = new Date (dateOfBirth);
@@ -12,4 +14,26 @@ export const formatMonthYear = dateString => {
     if (!dateString) return "Actualidad";
     const date = new Date (dateString);
     return date.toLocaleDateString ('es-AR', { month: 'short', year: 'numeric' }).replace ('.', '');
-    };
+};
+
+export function formatAvailability (availability = []) {
+    if (!Array.isArray(availability) || availability.length === 0) return "A convenir";
+
+    const groupedDays = new Map ();
+
+    availability.forEach (({ dayOfWeek, startTime, endTime }) => {
+        const day = DAYS_OF_WEEK[dayOfWeek];
+
+        if (dayOfWeek == null || !day || !startTime || !endTime) return;
+
+        if (!groupedDays.has (day)) groupedDays.set (day, []);
+
+        groupedDays.get(day).push(`${startTime} a ${endTime}`);
+    });
+
+    if (groupedDays.size === 0) return "A convenir";
+
+    return [...groupedDays.entries()]
+        .map (([day, hours]) => `${day}: ${hours.join (", ")}`)
+        .join (" · ");
+}
