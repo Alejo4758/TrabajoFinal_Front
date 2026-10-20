@@ -5,6 +5,7 @@ import RegisterAT from './pages/registerAT/RegisterAT';
 import RegisterClient from './pages/RegisterClient/RegisterClient';
 import ATSearch from './pages/ATSearch/ATSearch';
 import ATProfile from './pages/ATProfile/ATProfile';
+import ChatPage from './pages/chatPage/chatPage';
 
 export default function App () {
   return (
@@ -16,6 +17,7 @@ export default function App () {
         <Route path='/registerClient' element={<RegisterClient/>}/>
         <Route path='/searchAT' element={<ATSearch/>}/>
         <Route path='/profileAT/at/:id' element={<ATProfile/>}/>
+        <Route path='/chat' element={<ChatPage/>}/> 
       </Routes>
     </BrowserRouter>
   )

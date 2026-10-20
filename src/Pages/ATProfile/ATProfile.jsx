@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { getATById } from '../../services/itemsService';
-import { calculateAge, formatMonthYear } from '../../utils/utils';
 
 export default function ATProfile () {
     const { id } = useParams ();
