@@ -1,7 +1,8 @@
 import { Link } from "react-router";
-import { calculateAge } from "../../utils/utils";
+import { calculateAge, formatAvailability } from "../../utils/utils";
 
-export default function ATCard ({ id, name = "", lastName = "", dateOfBirth = "", localities = [], image = null, specialties = [], socialPrograms = [], availabilityHours = "A convenir" }) {    
+export default function ATCard ({ id, name = "", lastName = "", dateOfBirth = "", localities = [], image = null, specialties = [], socialPrograms = [], availability = [] }) {    
+    
     return (
         <article className="flex h-full flex-col border border-border bg-surface rounded-2xl p-5">
             <div className="flex items-center gap-4">
@@ -60,7 +61,7 @@ export default function ATCard ({ id, name = "", lastName = "", dateOfBirth = ""
                         Disponibilidad Horaria
                     </h3>
                     <p className="text-sm font-medium text-text">
-                        {availabilityHours}
+                        {formatAvailability (availability)}
                     </p>
                 </section>          
             </div>
