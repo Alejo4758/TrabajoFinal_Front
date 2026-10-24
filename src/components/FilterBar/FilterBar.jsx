@@ -1,12 +1,116 @@
 import { useEffect, useState } from "react";
+import { getDepartments, getLocalities, getProvinces } from "../../services/itemsService";
 
 export default function FilterBar ({ filters, onApply, disabled = false }) {
     const [form, setForm] = useState (filters);
+    const [provinces, setProvinces] = useState ([]);
+    const [departments, setDepartments] = useState ([]);
+    const [localities, setLocalities] = useState ([]);
+    const [provincesLoading, setProvincesLoading] = useState (true);
+    const [departmentsLoading, setDepartmentsLoading] = useState (false);
+    const [localitiesLoading, setLocalitiesLoading] = useState (false);
+    const [provincesError, setProvincesError] = useState (null);
+    const [departmentsError, setDepartmentsError] = useState (null);
+    const [localitiesError, setLocalitiesError] = useState (null);
 
     useEffect (() => { setForm (filters); }, [filters]);
 
+    useEffect (() => {
+        let cancelled = false;
+
+        const fetchProvinces = async () => {
+            const result = await getProvinces ();
+
+            if (cancelled) return;
+
+            if (result.error) {
+                setProvincesError (result.error);
+            } else {
+                setProvinces (result.data);
+            }
+            setProvincesLoading (false);
+        };
+
+        fetchProvinces ();
+
+        return () => { cancelled = true; };
+    }, []);
+
+    useEffect (() => {
+        let cancelled = false;
+
+        const fetchDepartments = async () => {
+            if (!form.province) {
+                setDepartmentsLoading (false);
+                return;
+            }
+
+            setDepartmentsLoading (true);
+            setDepartmentsError (null);
+            const result = await getDepartments (form.province);
+
+            if (cancelled) return;
+
+            if (result.error) {
+                setDepartmentsError (result.error);
+            } else {
+                setDepartments (result.data);
+            }
+            setDepartmentsLoading (false);
+        };
+
+        fetchDepartments ();
+
+        return () => { cancelled = true; };
+    }, [form.province]);
+
+    useEffect (() => {
+        let cancelled = false;
+
+        const fetchLocalities = async () => {
+            if (!form.province || !form.department) {
+                setLocalitiesLoading (false);
+                return;
+            }
+
+            setLocalitiesLoading (true);
+            setLocalitiesError (null);
+            const result = await getLocalities (form.province, form.department);
+
+            if (cancelled) return;
+
+            if (result.error) {
+                setLocalitiesError (result.error);
+            } else {
+                setLocalities (result.data);
+            }
+            setLocalitiesLoading (false);
+        };
+
+        fetchLocalities ();
+
+        return () => { cancelled = true; };
+    }, [form.province, form.department]);
+
     const handleChange = event => {
         const { name, value } = event.target;
+
+        if (name === "province") {
+            setDepartments ([]);
+            setLocalities ([]);
+            setDepartmentsError (null);
+            setLocalitiesError (null);
+            setForm (previous => ({ ...previous, province: value, department: "", locality: "" }));
+            return;
+        }
+
+        if (name === "department") {
+            setLocalities ([]);
+            setLocalitiesError (null);
+            setForm (previous => ({ ...previous, department: value, locality: "" }));
+            return;
+        }
+
         setForm ((prevForm) => ({ ...prevForm, [name]: value }));
     };
 
@@ -17,6 +121,8 @@ export default function FilterBar ({ filters, onApply, disabled = false }) {
 
     const clearFilters = () => {
         const emptyFilters = {
+            province: "",
+            department: "",
             locality: "",
             specialties: "",
             socialPrograms: "",
@@ -25,17 +131,6 @@ export default function FilterBar ({ filters, onApply, disabled = false }) {
         onApply (emptyFilters);
     };
 
-
-    const LOCALITIES = [
-        "Allen",
-        "Centenario",
-        "Cinco Saltos",
-        "Cipolletti",
-        "Fernández Oro",
-        "General Roca",
-        "Neuquén",
-        "Plottier",
-    ];
 
     const SPECIALTIES = [
         "Adultos",
@@ -62,25 +157,70 @@ export default function FilterBar ({ filters, onApply, disabled = false }) {
     return (
         <form className="mb-8 grid grid-cols-1 gap-4 rounded-2xl border border-border bg-surface p-5 md:grid-cols-2 lg:grid-cols-4" onSubmit={handleSubmit}>
             <div>
+                <label className="mb-2 block text-sm font-medium text-text" htmlFor="province">
+                    Provincia
+                </label>
+                <select className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-text outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" id="province" name="province" value={form.province || ""} onChange={handleChange} disabled={provincesLoading || Boolean(provincesError)}>
+                    <option value="">
+                        {provincesLoading ? "Cargando provincias..." : "Todas las provincias"}
+                    </option>
+                    {provinces.map (province => (
+                        <option key={province} value={province}>
+                            {province}
+                        </option>
+                    ))}
+                </select>
+                {provincesError && (
+                    <p className="mt-2 text-sm text-red-600" role="alert">
+                        No se pudieron cargar las provincias. {provincesError}
+                    </p>
+                )}
+            </div>
+            <div>
+                <label className="mb-2 block text-sm font-medium text-text" htmlFor="department">
+                    Departamento
+                </label>
+                <select className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-text outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" id="department" name="department" value={form.department || ""} onChange={handleChange} disabled={!form.province || departmentsLoading || Boolean(departmentsError)}>
+                    <option value="">
+                        {!form.province ? "Elegí una provincia primero" : departmentsLoading ? "Cargando departamentos..." : "Todos los departamentos"}
+                    </option>
+                    {departments.map (department => (
+                        <option key={department} value={department}>
+                            {department}
+                        </option>
+                    ))}
+                </select>
+                {departmentsError && (
+                    <p className="mt-2 text-sm text-red-600" role="alert">
+                        No se pudieron cargar los departamentos. {departmentsError}
+                    </p>
+                )}
+            </div>
+            <div>
                 <label className="mb-2 block text-sm font-medium text-text" htmlFor="locality">
                     Localidad
                 </label>
-                <select className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-text outline-none focus:border-primary" id="locality" name="locality" value={form.locality} onChange={handleChange}>
+                <select className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-text outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" id="locality" name="locality" value={form.locality || ""} onChange={handleChange} disabled={!form.department || localitiesLoading || Boolean(localitiesError)}>
                     <option value="">
-                        Todas las localidades
+                        {!form.department ? "Elegí un departamento primero" : localitiesLoading ? "Cargando localidades..." : "Todas las localidades"}
                     </option>
-                    {LOCALITIES.map (locality => (
+                    {localities.map (locality => (
                         <option key={locality} value={locality}>
                             {locality}
                         </option>
                     ))}
                 </select>
+                {localitiesError && (
+                    <p className="mt-2 text-sm text-red-600" role="alert">
+                        No se pudieron cargar las localidades. {localitiesError}
+                    </p>
+                )}
             </div>
             <div>
                 <label className="mb-2 block text-sm font-medium text-text" htmlFor="specialties">
                     Especialidad
                 </label>
-                <select className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-text outline-none focus:border-primary" id="specialties" name="specialties" value={form.specialties} onChange={handleChange}>
+                <select className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-text outline-none focus:border-primary" id="specialties" name="specialties" value={form.specialties || ""} onChange={handleChange}>
                     <option value="">
                         Todas las especialidades
                     </option>
@@ -95,7 +235,7 @@ export default function FilterBar ({ filters, onApply, disabled = false }) {
                 <label className="mb-2 block text-sm font-medium text-text" htmlFor="socialPrograms">
                     Obra social
                 </label>
-                <select className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-text outline-none focus:border-primary" id="socialPrograms" name="socialPrograms" value={form.socialPrograms} onChange={handleChange}>
+                <select className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-text outline-none focus:border-primary" id="socialPrograms" name="socialPrograms" value={form.socialPrograms || ""} onChange={handleChange}>
                     <option value="">
                         Todas las obras sociales
                     </option>

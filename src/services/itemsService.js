@@ -7,6 +7,12 @@ export const getATs = async (page = 1, limit = 10, filters = {}) => {
         url.searchParams.append ("page", page);
         url.searchParams.append ("limit", limit);
 
+        if (filters.province) {
+            url.searchParams.append ("province", filters.province);
+        }
+        if (filters.department) {
+            url.searchParams.append ("department", filters.department);
+        }
         if (filters.locality) {
             url.searchParams.append ("locality", filters.locality);
         }   
@@ -35,6 +41,43 @@ export const getATs = async (page = 1, limit = 10, filters = {}) => {
         return { data: null, error: "Error de conexión con el servidor" };
     }
 };
+
+const getLocationOptions = async (path, params, label) => {
+    try {
+        const url = new URL (`${BASE_URL}${path}`);
+        Object.entries (params).forEach (([key, value]) => {
+            if (value) url.searchParams.set (key, value);
+        });
+        const response = await fetch (url);
+
+        if (!response.ok) {
+            console.error (`El backend rechazó el pedido de ${label}: ${response.status}`);
+            return { data: null, error: `Error del servidor: ${response.status}` };
+        }
+
+        const result = await response.json ();
+        const options = result.data ?? result;
+
+        if (!Array.isArray (options) || !options.every (option => typeof option === "string")) {
+            console.error (`El backend devolvió un formato inválido para ${label}`);
+            return { data: null, error: `La respuesta del servidor para ${label} no es válida` };
+        }
+
+        return { data: options, error: null };
+    }
+    catch (error) {
+        console.error (`Error al obtener ${label}:`, error);
+        return { data: null, error: "Error de conexión con el servidor" };
+    }
+};
+
+export const getProvinces = () => getLocationOptions ("/localities/provinces", {}, "provincias");
+
+export const getDepartments = province =>
+    getLocationOptions ("/localities/departments", { province }, "departamentos");
+
+export const getLocalities = (province = "", department = "") =>
+    getLocationOptions ("/localities", { province, department }, "localidades");
 
 export const getATById = async id => {
     try {
