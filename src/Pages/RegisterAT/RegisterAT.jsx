@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router";
 import { useState } from "react";
-import { registerAT } from "../../services/atServiceMock";
+import { registerAT } from "../../services/authService";
 import FormField from "../../components/FormField/FormField";
 
 export default function RegisterAT () {
