@@ -1,37 +1,60 @@
 import { useEffect, useState } from "react";
-import { getDepartments, getLocalities, getProvinces } from "../../services/itemsService";
+import { 
+    getDepartments, 
+    getLocalities, 
+    getProvinces, 
+    getFilterOptions 
+} from "../../services/itemsService";
 
 export default function FilterBar ({ filters, onApply, disabled = false }) {
     const [form, setForm] = useState (filters);
     const [provinces, setProvinces] = useState ([]);
     const [departments, setDepartments] = useState ([]);
     const [localities, setLocalities] = useState ([]);
+    const [specialties, setSpecialties] = useState ([]);
+    const [socialPrograms, setSocialPrograms] = useState ([]);
+
     const [provincesLoading, setProvincesLoading] = useState (true);
     const [departmentsLoading, setDepartmentsLoading] = useState (false);
     const [localitiesLoading, setLocalitiesLoading] = useState (false);
+    const [optionsLoading, setOptionsLoading] = useState (true);
+
     const [provincesError, setProvincesError] = useState (null);
     const [departmentsError, setDepartmentsError] = useState (null);
     const [localitiesError, setLocalitiesError] = useState (null);
+    const [optionsError, setOptionsError] = useState (null);
 
     useEffect (() => { setForm (filters); }, [filters]);
 
+    // Cargar Provincias y Opciones de BD (Especialidades + Obras Sociales) en paralelo
     useEffect (() => {
         let cancelled = false;
 
-        const fetchProvinces = async () => {
-            const result = await getProvinces ();
+        const fetchInitialData = async () => {
+            const [provResult, optionsResult] = await Promise.all ([
+                getProvinces (),
+                getFilterOptions ()
+            ]);
 
             if (cancelled) return;
 
-            if (result.error) {
-                setProvincesError (result.error);
+            if (provResult.error) {
+                setProvincesError (provResult.error);
             } else {
-                setProvinces (result.data);
+                setProvinces (provResult.data);
             }
             setProvincesLoading (false);
+
+            if (optionsResult.error) {
+                setOptionsError (optionsResult.error);
+            } else {
+                setSpecialties (optionsResult.data.specialties);
+                setSocialPrograms (optionsResult.data.socialPrograms);
+            }
+            setOptionsLoading (false);
         };
 
-        fetchProvinces ();
+        fetchInitialData ();
 
         return () => { cancelled = true; };
     }, []);
@@ -131,29 +154,6 @@ export default function FilterBar ({ filters, onApply, disabled = false }) {
         onApply (emptyFilters);
     };
 
-
-    const SPECIALTIES = [
-        "Adultos",
-        "Adolescencia",
-        "Discapacidad",
-        "Inclusión escolar",
-        "Niñez",
-        "Salud mental",
-        "TEA",
-        "Tercera edad",
-    ];
-
-    const SOCIAL_PROGRAMS = [
-        "IOSFA",
-        "IPROSS",
-        "Medifé",
-        "OSDE",
-        "PAMI",
-        "Swiss Medical",
-    ];
-
-    
-
     return (
         <form className="mb-8 grid grid-cols-1 gap-4 rounded-2xl border border-border bg-surface p-5 md:grid-cols-2 lg:grid-cols-4" onSubmit={handleSubmit}>
             <div>
@@ -220,31 +220,41 @@ export default function FilterBar ({ filters, onApply, disabled = false }) {
                 <label className="mb-2 block text-sm font-medium text-text" htmlFor="specialties">
                     Especialidad
                 </label>
-                <select className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-text outline-none focus:border-primary" id="specialties" name="specialties" value={form.specialties || ""} onChange={handleChange}>
+                <select className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-text outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" id="specialties" name="specialties" value={form.specialties || ""} onChange={handleChange} disabled={optionsLoading || Boolean(optionsError)}>
                     <option value="">
-                        Todas las especialidades
+                        {optionsLoading ? "Cargando especialidades..." : "Todas las especialidades"}
                     </option>
-                    {SPECIALTIES.map (specialty => (
+                    {specialties.map (specialty => (
                         <option key={specialty} value={specialty}>
                             {specialty}
                         </option>
                     ))}
                 </select>
+                {optionsError && (
+                    <p className="mt-2 text-sm text-red-600" role="alert">
+                        No se pudieron cargar las especialidades. {optionsError}
+                    </p>
+                )}
             </div>
             <div>
                 <label className="mb-2 block text-sm font-medium text-text" htmlFor="socialPrograms">
                     Obra social
                 </label>
-                <select className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-text outline-none focus:border-primary" id="socialPrograms" name="socialPrograms" value={form.socialPrograms || ""} onChange={handleChange}>
+                <select className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-text outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60" id="socialPrograms" name="socialPrograms" value={form.socialPrograms || ""} onChange={handleChange} disabled={optionsLoading || Boolean(optionsError)}>
                     <option value="">
-                        Todas las obras sociales
+                        {optionsLoading ? "Cargando obras sociales..." : "Todas las obras sociales"}
                     </option>
-                    {SOCIAL_PROGRAMS.map (program => (
+                    {socialPrograms.map (program => (
                         <option key={program} value={program}>
                             {program}
                         </option>
                     ))}
                 </select>
+                {optionsError && (
+                    <p className="mt-2 text-sm text-red-600" role="alert">
+                        No se pudieron cargar las obras sociales. {optionsError}
+                    </p>
+                )}
             </div>
             <div className="flex items-end gap-2">
                 <button className="flex-1 cursor-pointer rounded-xl bg-primary px-4 py-2.5 font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60" type="submit" disabled={disabled}>
@@ -255,5 +265,5 @@ export default function FilterBar ({ filters, onApply, disabled = false }) {
                 </button>
             </div>
         </form>
-    )
+    );
 }

@@ -2,7 +2,7 @@ const BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000").repla
 
 export const getATs = async (page = 1, limit = 10, filters = {}) => {
     try {
-        const url = new URL (`${BASE_URL}/ats/search`); // CAMBIAR LA RUTA POR EL ENDPOINT REAL 
+        const url = new URL (`${BASE_URL}/ats/search`);
         
         url.searchParams.append ("page", page);
         url.searchParams.append ("limit", limit);
@@ -78,6 +78,35 @@ export const getDepartments = province =>
 
 export const getLocalities = (province = "", department = "") =>
     getLocationOptions ("/localities", { province, department }, "localidades");
+
+export const getFilterOptions = async () => {
+    try {
+        const response = await fetch (`${BASE_URL}/ats/filters-options`);
+
+        if (!response.ok) {
+            console.error (`El backend rechazó el pedido de opciones de filtros: ${response.status}`);
+            return { data: null, error: `Error del servidor: ${response.status}` };
+        }
+
+        const result = await response.json ();
+        const payload = result.data ?? result;
+
+        // Transformamos los objetos { id, name } de Prisma en arrays de strings
+        // para que funcionen igual que provinces/departments/localities en FilterBar.jsx
+        return {
+            data: {
+                specialties: (payload.specialties || []).map (s => typeof s === "object" ? s.name : s),
+                socialPrograms: (payload.socialPrograms || []).map (o => typeof o === "object" ? o.name : o),
+                localities: (payload.localities || []).map (l => typeof l === "object" ? l.name : l),
+            },
+            error: null
+        };
+    }
+    catch (error) {
+        console.error ("Error al obtener opciones de filtros:", error);
+        return { data: null, error: "Error de conexión con el servidor" };
+    }
+};
 
 export const getATById = async id => {
     try {
