@@ -1,6 +1,6 @@
 
 import { useCallback, useEffect, useState } from "react";
-import { getPendingATProfiles, reviewATProfile } from "../../services/mock";
+import { getPendingATProfiles, reviewATProfile } from "../../services/adminService";
 import ValidationList from "../../components/ValidationList/ValidationList";
 import ValidationDetail from "../../components/ValidationDetail/ValidationDetail";
 import Icon from "../../components/Icon/Icon";
