@@ -7,11 +7,13 @@ const ATS_PER_PAGE = 9;
 export const useATs = () => {
     const [searchParams, setSearchParams] = useSearchParams ();
     
+    const province = searchParams.get ("province") || "";
+    const department = searchParams.get ("department") || "";
     const locality = searchParams.get ("locality") || "";
     const specialties = searchParams.get ("specialties") || "";
     const socialPrograms = searchParams.get ("socialPrograms") || "";
     
-    const filters = useMemo (() => ({ locality, specialties, socialPrograms }), [locality, specialties, socialPrograms,]);
+    const filters = useMemo (() => ({ province, department, locality, specialties, socialPrograms }), [province, department, locality, specialties, socialPrograms,]);
     
     const [ats, setAts] = useState ([]);
     const [page, setPage] = useState (1);
@@ -90,7 +92,7 @@ export const useATs = () => {
     const applyFilters = useCallback (values => {
         const params = new URLSearchParams (searchParams);
 
-        ["locality", "specialties", "socialPrograms"].forEach (key => {
+        ["province", "department", "locality", "specialties", "socialPrograms"].forEach (key => {
             const value = String (values[key] ?? "").trim ();
 
             if (value) {
