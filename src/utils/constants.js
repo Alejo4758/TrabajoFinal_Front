@@ -10,10 +10,10 @@ export const ICONS = {
   plan: "M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 3h6v4H9V3Zm0 11 2 2 4-4",
   chart: "M4 20h16M7 20v-7m5 7V6m5 14v-10",
   edit: "M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Zm9-13 4 4",
-  mail: 'M4 6h16v12H4V6Zm0 1 8 6 8-6',
-  lock: 'M6 11V8a6 6 0 0 1 12 0v3M5 11h14v9H5v-9Z',
+  mail: "M4 6h16v12H4V6Zm0 1 8 6 8-6",
+  lock: "M6 11V8a6 6 0 0 1 12 0v3M5 11h14v9H5v-9Z",
+  clock: "M12 8v4l3 2m6-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z",
 };
-
 export const AT_FEATURES = [
   { icon: "plan", title: "Armá tu plan de trabajo", text: "Estructurá objetivos generales y específicos, áreas de intervención y estrategias de tratamiento" },
   { icon: "chart", title: "Evaluación del tratamiento", text: "Registrá el nivel de evolución de cada objetivo y consultá el progreso con representaciones gráficas" },
@@ -31,5 +31,6 @@ export const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-
 export const ROLE_ROUTES = {
   CLIENT: "/searchAT",
   AT: "/ruta-del-at",
+  ADMIN: "/panelAdmin"
 };
 export const DEFAULT_ROUTE = "/";

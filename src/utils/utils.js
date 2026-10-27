@@ -12,4 +12,32 @@ export const formatMonthYear = dateString => {
     if (!dateString) return "Actualidad";
     const date = new Date (dateString);
     return date.toLocaleDateString ('es-AR', { month: 'short', year: 'numeric' }).replace ('.', '');
-    };
+};
+
+export const formatDateList = date => {
+    if (!date) return "Fecha no disponible";
+    
+    const parsedDate = new Date (date);
+
+    if (Number.isNaN (parsedDate.getTime ())) return "Fecha no disponible";
+
+    return new Intl.DateTimeFormat ("es-AR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+    }).format (parsedDate);
+}
+
+export const formatDateDetail = date => {
+    if (!date) return "No informado";
+
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN (parsedDate.getTime ())) return "No informado";
+
+    return new Intl.DateTimeFormat ("es-AR", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+    }).format (parsedDate);
+}
