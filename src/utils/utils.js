@@ -42,6 +42,8 @@ export const formatDateDetail = date => {
         month: "long",
         year: "numeric",
     }).format (parsedDate);
+};
+
 export function formatAvailability (availability = []) {
     if (!Array.isArray(availability) || availability.length === 0) return "A convenir";
 
