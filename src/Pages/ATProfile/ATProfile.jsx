@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { getATById } from '../../services/itemsService';
 import { calculateAge, formatMonthYear, formatAvailability } from '../../utils/utils';
+import ModalEngagement from '../../components/ModalEngagement/ModalEngagement';
 
 export default function ATProfile () {
     const { id } = useParams ();
@@ -11,6 +12,9 @@ export default function ATProfile () {
     const [at, setAt] = useState (null);
     const [loading, setLoading] = useState (true);
     const [error, setError] = useState (null);
+    const [showRequestModal, setShowRequestModal] = useState (false);
+    const [requestSent, setRequestSent] = useState (false);
+    const requestButtonRef = useRef (null);
 
     useEffect(() => {
         const fetchProfessional = async () => {
@@ -19,26 +23,7 @@ export default function ATProfile () {
             if (error) {
                 setError (error);
             } else {
-                const dataWithMockExperience = {
-                    ...data,
-                    experiences: data.experiences || [
-                        {
-                            id: 1,
-                            title: "Acompañante Terapéutico Escolar",
-                            startDate: "2023-03-01T00:00:00.000Z",
-                            finishDate: null,
-                            description: "Acompañamiento en nivel primario para niño con TEA. Adaptación de contenidos y mediación vincular con pares."
-                        },
-                        {
-                            id: 2,
-                            title: "AT Domiciliario - Tercera Edad",
-                            startDate: "2021-06-15T00:00:00.000Z",
-                            finishDate: "2023-01-10T00:00:00.000Z",
-                            description: "Asistencia en actividades de la vida diaria (AVD), estimulación cognitiva y acompañamiento a turnos médicos."
-                        }
-                    ]
-                };
-                setAt (dataWithMockExperience);
+                setAt (data);
             }
             setLoading (false);
         };
@@ -65,6 +50,20 @@ export default function ATProfile () {
         </main>
     );
 
+    const handleRequestClick = () => {
+        // Para solicitar una vinculación hay que haber iniciado sesión
+        if (!localStorage.getItem ("token")) {
+            navigate ("/login");
+            return;
+        }
+        setShowRequestModal (true);
+    };
+
+    const handleCloseRequestModal = () => {
+        requestButtonRef.current?.focus ();
+        setShowRequestModal (false);
+    };
+
     const profileImage = at.image || "https://avatars.githubusercontent.com/u/217831763?s=400&v=4";
 
     return (
@@ -83,8 +82,13 @@ export default function ATProfile () {
                             <p className="text-text-secondary font-medium mb-6">
                                 {calculateAge (at.dateOfBirth)} años
                             </p>
-                            <button className="w-full cursor-pointer rounded-xl bg-primary px-4 py-3.5 font-semibold text-white transition-all hover:bg-primary/90 hover:shadow-md mb-8">
-                                Solicitar vinculación
+                            <button
+                                ref={requestButtonRef}
+                                onClick={handleRequestClick}
+                                disabled={requestSent}
+                                className="w-full cursor-pointer rounded-xl bg-primary px-4 py-3.5 font-semibold text-white transition-all hover:bg-primary/90 hover:shadow-md mb-8 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:shadow-none"
+                            >
+                                {requestSent ? "Solicitud enviada" : "Solicitar vinculación"}
                             </button>
                             <div className="w-full space-y-4 text-left border-t border-border pt-6">
                                 <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-2">
@@ -169,7 +173,7 @@ export default function ATProfile () {
                             ) : (
                                 <div className="text-center py-8">
                                     <p className="text-text-secondary">
-                                        Este perfil aún no ha cargado experiencia profesional.
+                                        Este perfil aún no ha cargado experiencia profesional
                                     </p>
                                 </div>
                             )}
@@ -177,6 +181,7 @@ export default function ATProfile () {
                     </div>
                 </div>
             </div>
+            {showRequestModal && (<ModalEngagement at={at} atId={id} onClose={handleCloseRequestModal} onSuccess={() => setRequestSent (true)}/>)}
         </main>
     );
 }
