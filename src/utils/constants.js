@@ -23,7 +23,10 @@ export const ICONS = {
   mail: "M4 6h16v12H4V6Zm0 1 8 6 8-6",
   lock: "M6 11V8a6 6 0 0 1 12 0v3M5 11h14v9H5v-9Z",
   clock: "M12 8v4l3 2m6-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z",
+  check: "m5 12 4 4L19 6",
+  close: "M6 6l12 12M18 6 6 18"
 };
+
 export const AT_FEATURES = [
   { icon: "plan", title: "Armá tu plan de trabajo", text: "Estructurá objetivos generales y específicos, áreas de intervención y estrategias de tratamiento" },
   { icon: "chart", title: "Evaluación del tratamiento", text: "Registrá el nivel de evolución de cada objetivo y consultá el progreso con representaciones gráficas" },
@@ -43,4 +46,9 @@ export const ROLE_ROUTES = {
   AT: "/ruta-del-at",
   ADMIN: "/panelAdmin"
 };
+
 export const DEFAULT_ROUTE = "/";
+
+export const DESCRIPTION_MIN = 20;
+
+export const DESCRIPTION_MAX = 500;
