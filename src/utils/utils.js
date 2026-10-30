@@ -44,6 +44,32 @@ export const formatDateDetail = date => {
     }).format (parsedDate);
 };
 
+const RELATIVE_TIME_UNITS = [
+    ["year", 31536000],
+    ["month", 2592000],
+    ["week", 604800],
+    ["day", 86400],
+    ["hour", 3600],
+    ["minute", 60],
+];
+
+export const formatRelativeTime = date => {
+    if (!date) return "";
+
+    const parsedDate = new Date (date);
+
+    if (Number.isNaN (parsedDate.getTime ())) return "";
+
+    const seconds = Math.trunc ((parsedDate.getTime () - Date.now ()) / 1000);
+    const formatter = new Intl.RelativeTimeFormat ("es-AR", { numeric: "auto" });
+
+    for (const [unit, unitSeconds] of RELATIVE_TIME_UNITS) {
+        if (Math.abs (seconds) >= unitSeconds) return formatter.format (Math.trunc (seconds / unitSeconds), unit);
+    }
+
+    return "Recién";
+};
+
 export function formatAvailability (availability = []) {
     if (!Array.isArray(availability) || availability.length === 0) return "A convenir";
 

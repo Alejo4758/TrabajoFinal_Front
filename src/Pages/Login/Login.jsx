@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { login } from '../../services/authService';
 import { EMAIL_REGEX, ROLE_ROUTES, DEFAULT_ROUTE } from '../../utils/constants';
 import FormField from '../../components/FormField/FormField';
@@ -21,6 +21,7 @@ function BrandMark({ className = 'h-11 w-11' }) {
 
 export default function Login () {
   const navigate = useNavigate ();
+  const location = useLocation ();
 
   const [formData, setFormData] = useState ({ email: "", password: "" });
   const [error, setError] = useState (null);
@@ -67,7 +68,9 @@ export default function Login () {
     setError (null);
     try {
       const responseData = await login ({ email: formData.email.trim (), password: formData.password }); 
-      const destination = ROLE_ROUTES[responseData.user.role] ?? DEFAULT_ROUTE;
+      // Si llegó acá desde una página protegida, vuelve a esa página
+      const from = location.state?.from;
+      const destination = from ? `${from.pathname}${from.search}` : ROLE_ROUTES[responseData.user.role] ?? DEFAULT_ROUTE;
       localStorage.setItem ("token", responseData.token);
       localStorage.setItem ("user", JSON.stringify (responseData.user));
       navigate (destination, { replace: true });

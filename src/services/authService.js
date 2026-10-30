@@ -1,5 +1,38 @@
 const BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace (/\/+$/, "");
 
+// Lee el contenido (payload) del JWT. No verifica la firma: eso lo hace el backend
+const decodeTokenPayload = token => {
+  try {
+    const payload = token.split (".")[1].replace (/-/g, "+").replace (/_/g, "/");
+    return JSON.parse (atob (payload));
+  }
+  catch {
+    return null;
+  }
+};
+
+// Devuelve la sesión guardada en el login ({ token, user }), o null si no hay sesión o el token venció
+export const getSession = () => {
+  const token = localStorage.getItem ("token");
+  let user;
+
+  try {
+    user = JSON.parse (localStorage.getItem ("user") || "null");
+  }
+  catch {
+    return null;
+  }
+
+  if (!token || !user?.id) return null;
+
+  const payload = decodeTokenPayload (token);
+
+  if (!payload) return null;
+  if (payload.exp && payload.exp * 1000 <= Date.now ()) return null;
+
+  return { token, user };
+};
+
 export const login = async credentials => {
   const response = await fetch (`${BASE_URL}/auth/login`, {
     method: "POST",

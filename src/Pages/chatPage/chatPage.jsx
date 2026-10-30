@@ -1,13 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { socket } from "../../lib/socket";
+import { getSession } from "../../services/authService";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function ChatPage({ currentUser }) {
-  // Si todavía no tienes auth conectada, puedes probar pasando un prop o hardcodeando:
-  // const myUserId = currentUser?.id || 1;
-  const params = new URLSearchParams(window.location.search);
-const myUserId = Number(params.get("user") || currentUser?.id || 1);
+export default function ChatPage() {
+  // La ruta está protegida, así que siempre hay una sesión iniciada.
+  // Se lee una sola vez para que el usuario no cambie mientras la página está abierta.
+  const [session] = useState(getSession);
+  const myUserId = Number(session.user.id);
 
   const [conversations, setConversations] = useState([]);
   const [activeConv, setActiveConv] = useState(null);

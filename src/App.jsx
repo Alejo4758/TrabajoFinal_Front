@@ -7,6 +7,7 @@ import ATSearch from './pages/ATSearch/ATSearch';
 import ATProfile from './pages/ATProfile/ATProfile';
 import ChatPage from './pages/chatPage/chatPage';
 import PanelAdmin from './pages/PanelAdmin/PanelAdmin';
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 
 export default function App () {
   return (
@@ -18,8 +19,8 @@ export default function App () {
         <Route path='/registerClient' element={<RegisterClient/>}/>
         <Route path='/searchAT' element={<ATSearch/>}/>
         <Route path='/profileAT/at/:id' element={<ATProfile/>}/>
-        <Route path='/chat' element={<ChatPage/>}/> 
-        <Route path='/panelAdmin' element={<PanelAdmin/>}/> 
+        <Route path='/chat' element={<ProtectedRoute roles={['CLIENT', 'AT']}><ChatPage/></ProtectedRoute>}/>
+        <Route path='/panelAdmin' element={<ProtectedRoute roles={['ADMIN']}><PanelAdmin/></ProtectedRoute>}/>
       </Routes>
     </BrowserRouter>
   )
