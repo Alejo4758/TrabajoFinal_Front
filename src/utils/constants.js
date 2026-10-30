@@ -34,8 +34,8 @@ export const AT_FEATURES = [
 ];
 
 export const USER_FEATURES = [
-  { icon: "search", title: "Buscá con filtros", text: "Combiná zona de trabajo, área de trabajo y disponibilidad horaria para encontrar al profesional que se adapte a vos" },
-  { icon: "shield", title: "Perfiles validados", text: "Un administrador revisa la documentación de cada acompañante antes de que pueda aparecer en la búsqueda" },
+  { icon: "search", title: "Búsqueda filtrada", text: "A través de la especialidad, zona de trabaj o la disponibilidad horaria, encontrá al profesional que mejor se adapte a tu necesidad" },
+  { icon: "shield", title: "Perfiles validados", text: "Todo acompañante es revisado y validado antes de aparecer en los resultados de búsqueda" },
   { icon: "chat", title: "Chat integrado", text: "Si el acompañante acepta tu solicitud, conversan dentro de la plataforma para acordar pautas y coordinar actividades" }
 ];
 
