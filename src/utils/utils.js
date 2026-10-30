@@ -65,3 +65,7 @@ export function formatAvailability (availability = []) {
         .map (([day, hours]) => `${day}: ${hours.join (", ")}`)
         .join (" · ");
 }
+
+export const normalize = text => text.normalize ("NFD").replace (/[\u0300-\u036f]/g, "").toLowerCase ();
+
+export const initials = name => name.split (" ").slice (0, 2).map (word => word[0]).join ("").toUpperCase ();
