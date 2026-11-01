@@ -209,7 +209,7 @@ export default function Dashboard () {
           </section>
           <div className="grid gap-6 xl:grid-cols-2">
             <section className="rounded-xl border border-border bg-surface p-5">
-              <SectionHeader title="Mi agenda" subtitle="Próximos encuentros" to="/at/agenda" linkLabel="Ver agenda"/>
+              <SectionHeader title="Mi agenda" subtitle="Próximos encuentros" to="/calendario" linkLabel="Ver agenda"/>
               <h3 id="agenda-titulo" className="sr-only">
                 Próximos encuentros
               </h3>

@@ -12,6 +12,7 @@ import ChatPage from './Pages/chatPage/chatPage';
 import PanelAdmin from './Pages/PanelAdmin/PanelAdmin';
 import Dashboard from './Pages/AT/Dashboard/Dashboard';
 import LinkRequests from './Pages/AT/LinkRequests/LinkRequests';
+import Calendar from './Pages/Calendar/Calendar';
 import Unauthorized from './Pages/Unauthorized/Unauthorized';
 import NotFound from './Pages/404/404';
 import { ROLES } from './utils/constants';
@@ -23,7 +24,6 @@ export default function App () {
         <Routes>
           {/* Públicas */}
           <Route path='/' element={<Home/>}/>
-          <Route path='/profileAT/at/:id' element={<ATProfile/>}/>
           <Route path='/unauthorized' element={<Unauthorized/>}/>
 
           {/* Solo visitantes: con sesión iniciada redirigen al inicio del rol */}
@@ -37,6 +37,12 @@ export default function App () {
           <Route element={<ProtectedRoute/>}>
             <Route path='/chat' element={<ChatPage/>}/>
             <Route path='/searchAT' element={<ATSearch/>}/>
+            <Route path='/profileAT/at/:id' element={<ATProfile/>}/>
+          </Route>
+
+          {/* Agenda: cada rol ve su propia vista */}
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.AT, ROLES.CLIENT, ROLES.ADMIN]}/>}>
+            <Route path='/calendario' element={<Calendar/>}/>
           </Route>
 
           {/* Solo AT */}
