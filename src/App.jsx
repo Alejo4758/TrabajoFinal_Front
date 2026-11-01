@@ -11,6 +11,7 @@ import ATProfile from './Pages/ATProfile/ATProfile';
 import ChatPage from './Pages/chatPage/chatPage';
 import PanelAdmin from './Pages/PanelAdmin/PanelAdmin';
 import Dashboard from './Pages/AT/Dashboard/Dashboard';
+import LinkRequests from './Pages/AT/LinkRequests/LinkRequests';
 import Unauthorized from './Pages/Unauthorized/Unauthorized';
 import NotFound from './Pages/404/404';
 import { ROLES } from './utils/constants';
@@ -41,6 +42,7 @@ export default function App () {
           {/* Solo AT */}
           <Route element={<ProtectedRoute allowedRoles={[ROLES.AT]}/>}>
             <Route path='/dashboardAT' element={<Dashboard/>}/>
+            <Route path='/linkRequests' element={<LinkRequests/>}/>
           </Route>
 
           {/* Solo ADMIN */}
