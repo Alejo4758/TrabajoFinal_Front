@@ -59,6 +59,7 @@ export const ROLE_ROUTES = {
 export const NAV_LINKS = [
   { to: "/searchAT", label: "Buscar acompañantes", roles: [ROLES.CLIENT] },
   { to: "/dashboardAT", label: "Mi panel", roles: [ROLES.AT] },
+  { to: "/linkRequests", label: "Solicitudes", roles: [ROLES.AT] },
   { to: "/panelAdmin", label: "Administración", roles: [ROLES.ADMIN] },
   { to: "/chat", label: "Mensajes", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] }
 ];
