@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { sendLinkRequest } from '../../services/modalRequestService';
+import { useAuth } from '../../hooks/useAuth';
 import { DESCRIPTION_MAX, DESCRIPTION_MIN } from '../../utils/constants';
 import FormField from '../FormField/FormField';
 import Icon from "../Icon/Icon";
@@ -23,6 +24,7 @@ function FieldError ({ id, message }) {
 }
 
 export default function ModalEngagement ({ at, atId, onClose, onSuccess }) {
+  const { token } = useAuth ();
   const zones = at.locality ?? [];
   const programs = at.socialPrograms ?? [];
 
@@ -92,16 +94,24 @@ export default function ModalEngagement ({ at, atId, onClose, onSuccess }) {
             description: form.description.trim (), 
             locality: form.locality.trim (), 
             socialPrograms: form.socialPrograms, 
-            otherCoverage: form.otherCoverage 
-        });
+            otherCoverage: form.otherCoverage
+        }, token);
 
-      if (result.status === 201) {
+      if (result.status >= 200 && result.status < 300) {
         setSent (true);
         onSuccess ?. ();
         return;
       }
       if (result.status === 400) {
         setServerError (result.error || "Los datos ingresados no son válidos");
+        return;
+      }
+      if (result.status === 401 || result.status === 403) {
+        setServerError (result.error || "Tu sesión no permite enviar solicitudes. Volvé a iniciar sesión");
+        return;
+      }
+      if (result.status === 404) {
+        setServerError (result.error || "El profesional ya no está disponible");
         return;
       }
       if (result.status === 409) {
