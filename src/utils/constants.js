@@ -42,11 +42,26 @@ export const USER_FEATURES = [
 
 export const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*\.[A-Za-z]{2,}$/;
 
+// Roles que emite el backend (enum Role). Usar estas constantes evita que un error de tipeo deje una ruta mal protegida
+export const ROLES = {
+  CLIENT: "CLIENT",
+  AT: "AT",
+  ADMIN: "ADMIN"
+};
+
 export const ROLE_ROUTES = {
   CLIENT: "/searchAT",
-  AT: "/ruta-del-at",
+  AT: "/dashboardAT",
   ADMIN: "/panelAdmin"
 };
+
+// Enlaces de navegación y roles que pueden verlos. Tienen que coincidir con los roles de cada ruta en App.jsx
+export const NAV_LINKS = [
+  { to: "/searchAT", label: "Buscar acompañantes", roles: [ROLES.CLIENT] },
+  { to: "/dashboardAT", label: "Mi panel", roles: [ROLES.AT] },
+  { to: "/panelAdmin", label: "Administración", roles: [ROLES.ADMIN] },
+  { to: "/chat", label: "Mensajes", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] }
+];
 
 export const DEFAULT_ROUTE = "/";
 
