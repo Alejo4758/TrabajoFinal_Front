@@ -1,3 +1,5 @@
+import { ROLES } from "../utils/constants";
+
 const BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace (/\/+$/, "");
 
 // Lee el contenido (payload) del JWT. No verifica la firma: eso lo hace el backend
@@ -11,26 +13,49 @@ const decodeTokenPayload = token => {
   }
 };
 
-// Devuelve la sesión guardada en el login ({ token, user }), o null si no hay sesión o el token venció
+// Devuelve la sesión guardada en el login ({ token, user, expiresAt }), o null si no hay sesión, el token venció o los datos no son coherentes.
+// Todo lo que está en localStorage puede editarlo el usuario: estas validaciones evitan fallas por datos corruptos y que alguien
+// se asigne otro rol cambiando el JSON del usuario. La seguridad real la da el backend, que verifica la firma del token
 export const getSession = () => {
-  const token = localStorage.getItem ("token");
+  let token;
   let user;
 
+  // El acceso a localStorage puede fallar (almacenamiento bloqueado) y el JSON puede estar corrupto: en ambos casos no hay sesión
   try {
+    token = localStorage.getItem ("token");
     user = JSON.parse (localStorage.getItem ("user") || "null");
   }
   catch {
     return null;
   }
 
-  if (!token || !user?.id) return null;
+  if (!token || !user || typeof user !== "object" || user.id == null) return null;
+  if (!Object.values (ROLES).includes (user.role)) return null;
 
   const payload = decodeTokenPayload (token);
 
   if (!payload) return null;
   if (payload.exp && payload.exp * 1000 <= Date.now ()) return null;
 
-  return { token, user };
+  // El backend firma el token con { userId, role }: el usuario guardado tiene que coincidir con lo que dice el token
+  if (payload.userId !== user.id || payload.role !== user.role) return null;
+
+  return { token, user, expiresAt: payload.exp ? payload.exp * 1000 : null };
+};
+
+export const saveSession = (token, user) => {
+  localStorage.setItem ("token", token);
+  localStorage.setItem ("user", JSON.stringify (user));
+};
+
+export const clearSession = () => {
+  try {
+    localStorage.removeItem ("token");
+    localStorage.removeItem ("user");
+  }
+  catch {
+    // Si el almacenamiento está bloqueado no hay nada guardado que borrar
+  }
 };
 
 export const login = async credentials => {
