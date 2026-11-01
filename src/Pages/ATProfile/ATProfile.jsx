@@ -4,6 +4,7 @@ import { getATById } from '../../services/itemsService';
 import { useAuth } from '../../hooks/useAuth';
 import { calculateAge, formatMonthYear, formatAvailability } from '../../utils/utils';
 import ModalEngagement from '../../components/ModalEngagement/ModalEngagement';
+import InterviewRequestModal from '../../components/InterviewRequestModal/InterviewRequestModal';
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
 
 export default function ATProfile () {
@@ -11,14 +12,16 @@ export default function ATProfile () {
 
     const navigate = useNavigate ();
     const location = useLocation ();
-    const { isAuthenticated } = useAuth ();
+    const { isAuthenticated, user } = useAuth ();
 
     const [at, setAt] = useState (null);
     const [loading, setLoading] = useState (true);
     const [error, setError] = useState (null);
     const [showRequestModal, setShowRequestModal] = useState (false);
     const [requestSent, setRequestSent] = useState (false);
+    const [showInterviewModal, setShowInterviewModal] = useState (false);
     const requestButtonRef = useRef (null);
+    const interviewButtonRef = useRef (null);
 
     useEffect(() => {
         const fetchProfessional = async () => {
@@ -64,6 +67,22 @@ export default function ATProfile () {
         setShowRequestModal (false);
     };
 
+    const handleInterviewClick = () => {
+        if (!isAuthenticated) {
+            navigate ("/login", { state: { from: location } });
+            return;
+        }
+        setShowInterviewModal (true);
+    };
+
+    const handleCloseInterviewModal = () => {
+        interviewButtonRef.current?.focus ();
+        setShowInterviewModal (false);
+    };
+
+    // Solo los clientes (o visitantes, que pasan por el login) piden entrevistas
+    const canRequestInterview = !isAuthenticated || user?.role === "CLIENT";
+
     const profileImage = at.image || "https://avatars.githubusercontent.com/u/217831763?s=400&v=4";
 
     return (
@@ -90,6 +109,15 @@ export default function ATProfile () {
                             >
                                 {requestSent ? "Solicitud enviada" : "Solicitar vinculación"}
                             </button>
+                            {canRequestInterview && (
+                                <button
+                                    ref={interviewButtonRef}
+                                    onClick={handleInterviewClick}
+                                    className="-mt-5 mb-8 w-full cursor-pointer rounded-xl border border-primary px-4 py-3.5 font-semibold text-primary transition-colors hover:bg-primary/10"
+                                >
+                                    Solicitar entrevista
+                                </button>
+                            )}
                             <div className="w-full space-y-4 text-left border-t border-border pt-6">
                                 <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-2">
                                     Zona de Trabajo
@@ -181,6 +209,7 @@ export default function ATProfile () {
                     </div>
                 </div>
             </div>
+            {showInterviewModal && (<InterviewRequestModal at={at} onClose={handleCloseInterviewModal}/>)}
             {showRequestModal && (<ModalEngagement at={at} atId={id} onClose={handleCloseRequestModal} onSuccess={() => setRequestSent (true)}/>)}
         </main>
     );
