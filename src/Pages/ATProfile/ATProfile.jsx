@@ -1,14 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate, useLocation } from 'react-router';
 import { getATById } from '../../services/itemsService';
+import { useAuth } from '../../hooks/useAuth';
 import { calculateAge, formatMonthYear, formatAvailability } from '../../utils/utils';
 import ModalEngagement from '../../components/ModalEngagement/ModalEngagement';
+import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
 
 export default function ATProfile () {
     const { id } = useParams ();
 
     const navigate = useNavigate ();
-    
+    const location = useLocation ();
+    const { isAuthenticated } = useAuth ();
+
     const [at, setAt] = useState (null);
     const [loading, setLoading] = useState (true);
     const [error, setError] = useState (null);
@@ -31,11 +35,7 @@ export default function ATProfile () {
         fetchProfessional ();
     }, [id]);
 
-    if (loading) return (
-        <main className="flex min-h-screen items-center justify-center bg-background">
-            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-primary"/>
-        </main>
-    );
+    if (loading) return <LoadingScreen/>;
 
     if (error || !at) return (
         <main className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -51,9 +51,9 @@ export default function ATProfile () {
     );
 
     const handleRequestClick = () => {
-        // Para solicitar una vinculación hay que haber iniciado sesión
-        if (!localStorage.getItem ("token")) {
-            navigate ("/login");
+        // Para solicitar una vinculación hay que haber iniciado sesión: después del login vuelve a este perfil
+        if (!isAuthenticated) {
+            navigate ("/login", { state: { from: location } });
             return;
         }
         setShowRequestModal (true);
