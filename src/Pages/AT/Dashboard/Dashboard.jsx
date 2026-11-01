@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { getATDashboard } from "../../../services/dashboardService";
+import { useAuth } from "../../../hooks/useAuth";
 import { normalize, initials } from "../../../utils/utils";
 import { MAX_PATIENTS_SHOWN } from "../../../utils/constants";
 import StatCard from "../../../components/StatCard/StatCard";
@@ -58,26 +59,38 @@ function DashboardSkeleton () {
 }
 
 export default function Dashboard () {
+  const { token } = useAuth ();
   const [data, setData] = useState (null);
   const [loading, setLoading] = useState (true);
   const [error, setError] = useState ("");
   const [search, setSearch] = useState ("");
-
-  const load = async () => {
-    setLoading (true);
-    setError ("");
-    try {
-      setData (await getATDashboard ());
-    } catch (err) {
-      setError (err.message || "Hubo un problema al cargar tu información");
-    } finally {
-      setLoading (false);
-    }
-  };
+  // Cambiarlo vuelve a pedir los datos (botón "Reintentar")
+  const [reloadKey, setReloadKey] = useState (0);
 
   useEffect(() => {
-    load ();
-  }, []);
+    let cancelled = false;
+
+    getATDashboard (token)
+      .then (result => {
+        if (!cancelled) setData (result);
+      })
+      .catch (err => {
+        if (!cancelled) setError (err.message || "Hubo un problema al cargar tu información");
+      })
+      .finally (() => {
+        if (!cancelled) setLoading (false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, reloadKey]);
+
+  const reload = () => {
+    setLoading (true);
+    setError ("");
+    setReloadKey (key => key + 1);
+  };
 
   const filteredPatients = useMemo (() => {
     if (!data) return [];
@@ -103,7 +116,7 @@ export default function Dashboard () {
           <p className="text-sm text-red-600">
             {error}
           </p>
-          <button type="button" onClick={load} className="mt-4 cursor-pointer rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/30">
+          <button type="button" onClick={reload} className="mt-4 cursor-pointer rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/30">
             Reintentar
           </button>
         </div>
@@ -111,7 +124,7 @@ export default function Dashboard () {
       {!loading && !error && data && (
         <>
           {data.pendingRequests > 0 && (
-            <Link to="/at/solicitudes" className="flex flex-col gap-3 rounded-xl border border-primary/20 bg-primary/5 p-5 transition hover:border-primary/40 sm:flex-row sm:items-center sm:justify-between">
+            <Link to="/linkRequests" className="flex flex-col gap-3 rounded-xl border border-primary/20 bg-primary/5 p-5 transition hover:border-primary/40 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-4">
                 <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-white">
                   <Icon name="users"/>
@@ -165,7 +178,7 @@ export default function Dashboard () {
                               {patient.name}
                             </h3>
                             <p className="text-sm text-text-muted">
-                              {patient.age} años · Última actividad: {patient.lastActivity}
+                              Última actividad: {patient.lastActivity}
                             </p>
                           </div>
                         </div>
