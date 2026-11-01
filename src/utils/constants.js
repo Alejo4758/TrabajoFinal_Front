@@ -24,7 +24,9 @@ export const ICONS = {
   lock: "M6 11V8a6 6 0 0 1 12 0v3M5 11h14v9H5v-9Z",
   clock: "M12 8v4l3 2m6-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z",
   bell: "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9Zm4.3 13a1.94 1.94 0 0 0 3.4 0",
+  close: "M6 6l12 12M18 6 6 18"
 };
+
 export const AT_FEATURES = [
   { icon: "plan", title: "Armá tu plan de trabajo", text: "Estructurá objetivos generales y específicos, áreas de intervención y estrategias de tratamiento" },
   { icon: "chart", title: "Evaluación del tratamiento", text: "Registrá el nivel de evolución de cada objetivo y consultá el progreso con representaciones gráficas" },
@@ -32,8 +34,8 @@ export const AT_FEATURES = [
 ];
 
 export const USER_FEATURES = [
-  { icon: "search", title: "Buscá con filtros", text: "Combiná zona de trabajo, área de trabajo y disponibilidad horaria para encontrar al profesional que se adapte a vos" },
-  { icon: "shield", title: "Perfiles validados", text: "Un administrador revisa la documentación de cada acompañante antes de que pueda aparecer en la búsqueda" },
+  { icon: "search", title: "Búsqueda filtrada", text: "A través de la especialidad, zona de trabaj o la disponibilidad horaria, encontrá al profesional que mejor se adapte a tu necesidad" },
+  { icon: "shield", title: "Perfiles validados", text: "Todo acompañante es revisado y validado antes de aparecer en los resultados de búsqueda" },
   { icon: "chat", title: "Chat integrado", text: "Si el acompañante acepta tu solicitud, conversan dentro de la plataforma para acordar pautas y coordinar actividades" }
 ];
 
@@ -44,4 +46,9 @@ export const ROLE_ROUTES = {
   AT: "/ruta-del-at",
   ADMIN: "/panelAdmin"
 };
+
 export const DEFAULT_ROUTE = "/";
+
+export const DESCRIPTION_MIN = 20;
+
+export const DESCRIPTION_MAX = 500;

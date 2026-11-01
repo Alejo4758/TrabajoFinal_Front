@@ -49,12 +49,12 @@ function FeaturePanel ({ description, title, items, highlighted }) {
 
 function RoleCard ({ title, description, detail, to, cta, icon, featured }) {
   return (
-    <Link to={to} className={`group flex h-full flex-col rounded-3xl border p-7 transition-all duration-300 hover:-translate-y-1 sm:p-8 ${featured ? "border-primary bg-primary text-white shadow-xl shadow-primary/20" : "border-border bg-surface hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5"}`}>
+    <Link to={to} className={`group flex h-full flex-col rounded-3xl border p-7 transition-all duration-300 hover:-translate-y-1 sm:p-8 ${featured ? "border-primary bg-primary text-white shadow-xl shadow-primary/20" : "border-border bg-surface hover:shadow-xl hover:shadow-primary/5"}`}>
       <div className="flex items-start justify-between">
         <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${featured ? "bg-white/15 text-white" : "bg-primary/10 text-primary"}`}>
           <Icon name={icon} className="h-6 w-6"/>
         </div>
-        <div className={`rounded-full border p-2 transition-all duration-300 group-hover:translate-x-1 ${featured ? "border-white/40" : "border-border text-text-secondary group-hover:border-primary group-hover:bg-primary group-hover:text-white"}`}>
+        <div className={`rounded-full border p-2 transition-all duration-300 group-hover:translate-x-1 ${featured ? "border-white/40 group-hover:text-primary group-hover:bg-surface" : "border-border text-text-secondary group-hover:border-primary group-hover:bg-primary group-hover:text-white"}`}>
           <Icon name="arrow"/>
         </div>
       </div>
@@ -117,18 +117,18 @@ export default function Home () {
             </div>
           </div>
         </section>
-        <section className="border-t border-border py-16">
+        <section className="border-t border-border-strong py-16">
           <div className="mx-auto mb-12 max-w-2xl text-center">
             <h2 className="text-pretty mt-3 text-3xl font-bold tracking-tight text-text sm:text-4xl">
               Todo el acompañamiento, en un solo lugar
             </h2>
           </div>
           <div className="grid gap-6 lg:grid-cols-2">
-            <FeaturePanel description="Para quien busca acompañamiento" title="Encontrá al profesional indicado" items={USER_FEATURES}/>
-            <FeaturePanel highlighted description="Para acompañantes terapéuticos" title="Gestioná cada acompañamiento" items={AT_FEATURES}/>
+            <FeaturePanel highlighted description="Para quien busca acompañamiento" title="Encontrá al profesional indicado" items={USER_FEATURES}/>
+            <FeaturePanel description="Para acompañantes terapéuticos" title="Gestioná cada acompañamiento" items={AT_FEATURES}/>
           </div>
         </section>
-        <section className="border-t border-border py-16">
+        <section className="border-t border-border-strong py-16">
           <div className="mx-auto mb-10 max-w-2xl text-center">
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-text sm:text-4xl">
               ¿Cómo querés formar parte de RedAT?
