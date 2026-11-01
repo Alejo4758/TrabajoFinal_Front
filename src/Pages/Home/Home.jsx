@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { AT_FEATURES, USER_FEATURES } from "../../utils/constants";
 import Icon from "../../components/Icon/Icon";
+import SessionNav from "../../components/SessionNav/SessionNav";
 
 function BrandMark({ className = "h-11 w-11" }) {
   return (
@@ -86,12 +87,7 @@ export default function Home () {
               <span className="hidden text-[11px] tracking-wide text-text-secondary sm:block">Red de Acompañamiento Terapéutico</span>
             </div>
           </Link>
-          <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-text-secondary md:inline">¿Ya tenés una cuenta?</span>
-            <Link to="/login" className="rounded-xl border border-border bg-surface px-5 py-2.5 text-sm font-semibold text-text transition-colors hover:border-primary hover:text-primary">
-              Iniciar sesión
-            </Link>
-          </div>
+          <SessionNav/>
         </nav>
         <section className="mx-auto max-w-4xl py-20 sm:py-28 lg:py-32">
           <div className="text-center">

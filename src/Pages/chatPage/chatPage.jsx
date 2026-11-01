@@ -1,14 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { socket } from "../../lib/socket";
-import { getSession } from "../../services/authService";
+import { useAuth } from "../../hooks/useAuth";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function ChatPage() {
   // La ruta está protegida, así que siempre hay una sesión iniciada.
-  // Se lee una sola vez para que el usuario no cambie mientras la página está abierta.
-  const [session] = useState(getSession);
-  const myUserId = Number(session.user.id);
+  // Si la sesión se cierra, ProtectedRoute desmonta esta página antes de que se renderice sin usuario.
+  const { user } = useAuth();
+  const myUserId = Number(user.id);
 
   const [conversations, setConversations] = useState([]);
   const [activeConv, setActiveConv] = useState(null);

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useNotifications } from "../../hooks/useNotifications";
-import { getSession } from "../../services/authService";
+import { useAuth } from "../../hooks/useAuth";
 import { formatRelativeTime } from "../../utils/utils";
 import Icon from "../Icon/Icon";
 
@@ -15,7 +15,7 @@ const TYPE_ICONS = {
 
 export default function NotificationBell () {
     const navigate = useNavigate ();
-    const userId = getSession ()?.user.id;
+    const userId = useAuth ().user?.id;
 
     const { notifications, unreadCount, loading, error, reload, markAsRead, markAllAsRead } = useNotifications (userId);
     const [open, setOpen] = useState (false);
