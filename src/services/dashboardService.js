@@ -1,49 +1,87 @@
-// Por ahora SIMULA el backend con datos de prueba. Después reemplazar cada función por la llamada real
+import { formatRelativeTime } from "../utils/utils";
 
-const API_URL = import.meta.env?.VITE_API_URL ?? 'http://localhost:3000/api';
-const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem ('token')}` });
-const wait = ms => new Promise (resolve => setTimeout (resolve, ms));
+const BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace (/\/+$/, "");
 
-const MOCK = {
-  pendingRequests: 2,
-  unreadMessages: 3,
-  patients: [
-    { id: 1, name: 'Juan Pérez', age: 12, lastActivity: 'Hoy', status: 'Activo', nextMeeting: '10:00' },
-    { id: 2, name: 'María González', age: 24, lastActivity: 'Ayer', status: 'Activo', nextMeeting: '16:30' },
-    { id: 3, name: 'Tomás Rodríguez', age: 9, lastActivity: '28/10', status: 'Activo', nextMeeting: null },
-    { id: 4, name: 'Sofía Álvarez', age: 15, lastActivity: '25/10', status: 'Activo', nextMeeting: 'Mañana 09:00' },
-    { id: 5, name: 'Lucas Benítez', age: 31, lastActivity: '12/10', status: 'En pausa', nextMeeting: null },
-    { id: 6, name: 'Valentina Ríos', age: 7, lastActivity: '10/10', status: 'Activo', nextMeeting: null },
-  ],
-  appointments: [
-    { id: 1, day: 'Hoy', time: '10:00', patient: 'Juan Pérez', type: 'Encuentro presencial' },
-    { id: 2, day: 'Hoy', time: '16:30', patient: 'María González', type: 'Encuentro presencial' },
-    { id: 3, day: 'Mañana', time: '09:00', patient: 'Sofía Álvarez', type: 'Encuentro presencial' },
-  ],
-  notifications: [
-    { id: 1, text: 'Tenés mensajes nuevos para revisar.', time: 'Hace 15 minutos', unread: true },
-    { id: 2, text: 'Se actualizó la información de un paciente.', time: 'Ayer', unread: true },
-    { id: 3, text: 'Tenés un encuentro próximo en tu agenda.', time: 'Ayer', unread: true },
-  ],
+const ACTIVITY_TYPES = {
+  SESSION: "Sesión",
+  INTERVIEW: "Entrevista",
+  MEETING: "Reunión",
+  OTHER: "Otro",
 };
 
-// Contadores para las insignias del menú
-export async function getATSummary() {
-  // (backend): GET `${API_URL}/at/summary` con { headers: authHeaders() }
-  // -> { pendingRequests, unreadMessages, unreadNotifications }
-  void API_URL; void authHeaders;
-  await wait(300);
-  return {
-    pendingRequests: MOCK.pendingRequests,
-    unreadMessages: MOCK.unreadMessages,
-    unreadNotifications: MOCK.notifications.filter((n) => n.unread).length,
-  };
-}
+const fullName = person => [person?.name, person?.lastName].filter (Boolean).join (" ");
 
-// Datos de la pantalla de inicio
-export async function getATDashboard () {
-  // (backend): GET `${API_URL}/at/dashboard` con { headers: authHeaders() }
-  // -> { pendingRequests, unreadMessages, patients, appointments, notifications }
-  await wait(600);
-  return JSON.parse (JSON.stringify(MOCK));
-}
+const isSameDay = (a, b) => a.getFullYear () === b.getFullYear () && a.getMonth () === b.getMonth () && a.getDate () === b.getDate ();
+
+// "Hoy", "Mañana" o la fecha corta (ej: "mié 05/11")
+const formatDay = date => {
+  const today = new Date ();
+  const tomorrow = new Date (today.getFullYear (), today.getMonth (), today.getDate () + 1);
+  if (isSameDay (date, today)) return "Hoy";
+  if (isSameDay (date, tomorrow)) return "Mañana";
+  return new Intl.DateTimeFormat ("es-AR", { weekday: "short", day: "2-digit", month: "2-digit" }).format (date).replace (",", "");
+};
+
+const formatTime = date => new Intl.DateTimeFormat ("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false }).format (date);
+
+const parseDate = value => {
+  const date = value ? new Date (value) : null;
+  return date && !Number.isNaN (date.getTime ()) ? date : null;
+};
+
+// Convierte la respuesta del backend al formato que muestra el Dashboard
+const toDashboard = data => ({
+  pendingRequests: Number (data?.pendingRequests) || 0,
+  unreadMessages: Number (data?.unreadMessages) || 0,
+  patients: (data?.patients ?? []).map (patient => {
+    const lastActivity = parseDate (patient.lastActivity);
+    const nextMeeting = parseDate (patient.nextMeeting);
+    return {
+      id: patient.id,
+      name: fullName (patient),
+      lastActivity: lastActivity ? formatRelativeTime (lastActivity) : "Sin actividad",
+      status: "Activo",
+      nextMeeting: nextMeeting ? `${formatDay (nextMeeting)} ${formatTime (nextMeeting)}` : null,
+    };
+  }),
+  appointments: (data?.appointments ?? []).flatMap (appointment => {
+    const start = parseDate (appointment.startDate);
+    if (!start) return [];
+    return [{
+      id: appointment.id,
+      day: formatDay (start),
+      time: formatTime (start),
+      patient: fullName (appointment.client),
+      type: ACTIVITY_TYPES[appointment.type] ?? appointment.title ?? "Encuentro",
+    }];
+  }),
+  notifications: (data?.notifications ?? []).map (notification => ({
+    id: notification.id,
+    text: notification.title,
+    time: formatRelativeTime (notification.createdAt),
+    unread: !notification.isRead,
+  })),
+});
+
+// Datos de la pantalla de inicio del AT. El AT sale del token, por eso no se manda ningún id
+// Lanza un Error con el mensaje para mostrar si algo falla
+export const getATDashboard = async token => {
+  if (!token) throw new Error ("Tenés que iniciar sesión para ver tu panel");
+
+  let response;
+  try {
+    response = await fetch (`${BASE_URL}/at/me/dashboard`, { // CAMBIAR POR EL ENDPOINT REAL DEL BACK
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }
+  catch {
+    throw new Error ("Error de conexión con el backend. Intentá nuevamente");
+  }
+
+  const contentType = response.headers.get ("content-type") || "";
+  const responseBody = contentType.includes ("application/json") ? await response.json () : null;
+
+  if (!response.ok) throw new Error (responseBody?.message || responseBody?.error || `Error de backend: ${response.status}`);
+
+  return toDashboard (responseBody?.data ?? responseBody);
+};
