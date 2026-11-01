@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router';
-import { login } from '../../services/authService';
-import { EMAIL_REGEX, ROLE_ROUTES, DEFAULT_ROUTE } from '../../utils/constants';
+import { Link } from 'react-router';
+import { useAuth } from '../../hooks/useAuth';
+import { EMAIL_REGEX } from '../../utils/constants';
 import FormField from '../../components/FormField/FormField';
 import Icon from '../../components/Icon/Icon';
 
@@ -20,8 +20,7 @@ function BrandMark({ className = 'h-11 w-11' }) {
 }
 
 export default function Login () {
-  const navigate = useNavigate ();
-  const location = useLocation ();
+  const { login } = useAuth ();
 
   const [formData, setFormData] = useState ({ email: "", password: "" });
   const [error, setError] = useState (null);
@@ -67,13 +66,8 @@ export default function Login () {
     setIsLoading (true);
     setError (null);
     try {
-      const responseData = await login ({ email: formData.email.trim (), password: formData.password }); 
-      // Si llegó acá desde una página protegida, vuelve a esa página
-      const from = location.state?.from;
-      const destination = from ? `${from.pathname}${from.search}` : ROLE_ROUTES[responseData.user.role] ?? DEFAULT_ROUTE;
-      localStorage.setItem ("token", responseData.token);
-      localStorage.setItem ("user", JSON.stringify (responseData.user));
-      navigate (destination, { replace: true });
+      // Al guardarse la sesión, GuestRoute (que envuelve esta página) lleva al usuario a la página protegida de la que venía o al inicio de su rol
+      await login ({ email: formData.email.trim (), password: formData.password });
     } catch (err) {
       setError (err.message);
     } finally {

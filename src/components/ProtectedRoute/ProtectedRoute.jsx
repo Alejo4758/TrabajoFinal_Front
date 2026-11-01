@@ -1,18 +1,21 @@
-import { Navigate, useLocation } from "react-router";
-import { getSession } from "../../services/authService";
-import { ROLE_ROUTES, DEFAULT_ROUTE } from "../../utils/constants";
+import { Navigate, Outlet, useLocation } from "react-router";
+import { useAuth } from "../../hooks/useAuth";
+import LoadingScreen from "../LoadingScreen/LoadingScreen";
 
-// Solo muestra la página si hay una sesión iniciada y, si se indican roles, si el usuario tiene alguno de ellos.
-// Es una protección de la interfaz: el backend también tiene que validar el token en cada endpoint.
-export default function ProtectedRoute ({ roles, children }) {
+// Guardián de rutas privadas. Se usa como ruta contenedora: <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}/>}>.
+// Sin allowedRoles alcanza con tener sesión. Protege la interfaz, pero el backend tiene que validar token y rol en cada endpoint
+export default function ProtectedRoute ({ allowedRoles }) {
+    const { user, isAuthenticated, isLoading } = useAuth ();
     const location = useLocation ();
-    const session = getSession ();
 
-    // Sin sesión: al login, recordando la página pedida para volver después de iniciar sesión.
-    if (!session) return <Navigate to="/login" replace state={{ from: location }}/>;
+    // Mientras se verifica la sesión no se decide nada: redirigir ahora mandaría al login a alguien que sí tiene sesión
+    if (isLoading) return <LoadingScreen/>;
 
-    // Con sesión pero sin permiso: a la página de inicio de su rol.
-    if (roles && !roles.includes (session.user.role)) return <Navigate to={ROLE_ROUTES[session.user.role] ?? DEFAULT_ROUTE} replace/>;
+    // Sin sesión: al login, recordando la página pedida para volver después de iniciar sesión
+    if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location }}/>;
 
-    return children;
+    // Con sesión pero sin permiso: la página privada no llega a montarse (ni pide datos al backend)
+    if (allowedRoles && !allowedRoles.includes (user.role)) return <Navigate to="/unauthorized" replace/>;
+
+    return <Outlet/>;
 }
