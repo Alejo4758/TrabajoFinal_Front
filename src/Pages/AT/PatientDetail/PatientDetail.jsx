@@ -76,7 +76,7 @@ export default function PatientDetail () {
                         <button type="button" onClick={load} className="cursor-pointer rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/30">
                             Reintertar
                         </button>
-                        <Link to="/dashboard" className="rounded-xl border border-border px-5 py-2.5 text-sm font-semibold hover:bg-surface-alt">
+                        <Link to="/dashboardAT" className="rounded-xl border border-border px-5 py-2.5 text-sm font-semibold hover:bg-surface-alt">
                             Volver
                         </Link>
                     </div>
@@ -87,7 +87,7 @@ export default function PatientDetail () {
                 <>
                     <header className="rounded-xl border border-border bg-surface p-5 sm:p-6">
                         <nav className="mb-5 text-sm text-text-muted">
-                            <Link to="/dashboard" className="hover:text-primary hover:underline">
+                            <Link to="/dashboardAT" className="hover:text-primary hover:underline">
                                 Dashboard
                             </Link>
                             <span className="mx-2">

@@ -16,7 +16,7 @@ import Calendar from './Pages/Calendar/Calendar';
 import Unauthorized from './Pages/Unauthorized/Unauthorized';
 import NotFound from './Pages/404/404';
 import { ROLES } from './utils/constants';
-import PatientDetail from "./pages/AT/PatientDetail/PatientDetail";
+import PatientDetail from "./Pages/AT/PatientDetail/PatientDetail";
 
 export default function App () {
   return (
