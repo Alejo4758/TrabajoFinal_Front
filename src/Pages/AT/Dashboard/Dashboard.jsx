@@ -155,7 +155,7 @@ export default function Dashboard () {
                 <ul>
                   {shownPatients.map((patient) => (
                     <li key={patient.id} className="border-b border-border last:border-b-0">
-                      <Link to={`/at/pacientes/${patient.id}`} className="flex flex-col gap-3 p-4 transition hover:bg-surface-alt focus:bg-surface-alt focus:outline-none sm:flex-row sm:items-center sm:justify-between">
+                      <Link to={`/patient/${patient.id}`} className="flex flex-col gap-3 p-4 transition hover:bg-surface-alt focus:bg-surface-alt focus:outline-none sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex min-w-0 items-center gap-3">
                           <div className="grid size-12 shrink-0 place-items-center rounded-full bg-primary-light font-semibold text-primary">
                             {initials (patient.name)}
