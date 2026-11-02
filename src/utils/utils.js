@@ -69,3 +69,9 @@ export function formatAvailability (availability = []) {
 export const normalize = text => text.normalize ("NFD").replace (/[\u0300-\u036f]/g, "").toLowerCase ();
 
 export const initials = name => name.split (" ").slice (0, 2).map (word => word[0]).join ("").toUpperCase ();
+
+export function formatDate(iso, options = { day: 'numeric', month: 'short', year: 'numeric' }) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
+  if (!m) return '—';
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).toLocaleDateString('es-AR', options);
+}

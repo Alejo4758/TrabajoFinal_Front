@@ -55,3 +55,29 @@ export const DESCRIPTION_MIN = 20;
 export const DESCRIPTION_MAX = 500;
 
 export const MAX_PATIENTS_SHOWN = 5;
+
+export const PILL_TONES = {
+  primary: "bg-primary/10 text-primary",
+  neutral: "bg-surface-alt text-text-secondary",
+  success: "bg-success/10 text-success",
+  warning: "bg-amber-100 text-amber-800"
+};
+
+export const GROUPS = [
+    { id: "family", title: "Familia y referentes" },
+    { id: "professional", title: "Equipo profesional" }
+];
+
+export const THRESHOLDS = {
+  achieved: 75,
+  inProgress: 25,
+};
+
+export const COLORS = [
+  "#2563eb",
+  "#0f766e",
+  "#d97706",
+  "#9333ea",
+  "#e11d48",
+  "#0284c7",
+];
