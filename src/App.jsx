@@ -16,6 +16,7 @@ import Calendar from './Pages/Calendar/Calendar';
 import Unauthorized from './Pages/Unauthorized/Unauthorized';
 import NotFound from './Pages/404/404';
 import { ROLES } from './utils/constants';
+import PatientDetail from "./pages/AT/PatientDetail/PatientDetail";
 
 export default function App () {
   return (
@@ -49,6 +50,7 @@ export default function App () {
           <Route element={<ProtectedRoute allowedRoles={[ROLES.AT]}/>}>
             <Route path='/dashboardAT' element={<Dashboard/>}/>
             <Route path='/linkRequests' element={<LinkRequests/>}/>
+            <Route path='/patient/:id' element={<PatientDetail/>}/>
           </Route>
 
           {/* Solo ADMIN */}
