@@ -26,6 +26,7 @@ export const ICONS = {
   bell: "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9Zm4.3 13a1.94 1.94 0 0 0 3.4 0",
   close: "M6 6l12 12M18 6 6 18",
   home: "m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z",
+  credentials: "M12 16V4m0 0L8 8m4-4 4 4M5 20h14"
 };
 
 export const AT_FEATURES = [
