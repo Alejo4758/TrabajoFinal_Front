@@ -1,6 +1,6 @@
 import { CardPatientDetail } from "../../../../components/AT/CardPatientDetail/CardPatientDetail";
-import { ActionButton } from "../../../../components/AT/ActionButton/ActionButton";
 import { GROUPS } from "../../../../utils/constants";
+import ActionButton from "../../../../components/AT/ActionButton/ActionButton";
 import EmptyState from "../../../../components/AT/EmptyState/EmptyState";
 import Member from "../../../../components/AT/Member/Member";
 
