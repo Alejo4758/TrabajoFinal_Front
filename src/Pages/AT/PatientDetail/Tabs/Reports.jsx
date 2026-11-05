@@ -1,6 +1,6 @@
 import { CardPatientDetail } from '../../../../components/AT/CardPatientDetail/CardPatientDetail';
-import { ActionButton } from '../../../../components/AT/ActionButton/ActionButton';
 import { formatDate } from '../../../../utils/utils';
+import ActionButton from '../../../../components/AT/ActionButton/ActionButton';
 import EmptyState from '../../../../components/AT/EmptyState/EmptyState';
 import Pill from '../../../../components/AT/Pill/Pill';
 
