@@ -131,7 +131,7 @@ export default function ModalEngagement ({ at, atId, onClose, onSuccess }) {
   const otherChipIsFirst = programs.length === 0;
 
   return (
-    <div className="fixed inset-0 flex justify-center items-end bg-black/40 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-50 flex justify-center items-end bg-black/40 sm:items-center sm:p-4">
       <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-surface p-6 shadow-2xl sm:rounded-3xl sm:p-8">
         {sent ? (
           <div className="py-4 text-center">

@@ -132,7 +132,7 @@ export default function ATCalendar ({ userId }) {
   const dayActivities = byDay[selectedKey] ?? [];
 
   return (
-    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
+    <main className="min-h-page bg-background px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <h1 className="m-0 text-3xl font-bold text-text">Mi agenda</h1>
