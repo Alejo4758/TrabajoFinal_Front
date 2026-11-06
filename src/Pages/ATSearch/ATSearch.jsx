@@ -1,21 +1,17 @@
 import { useATs } from "../../hooks/useATs";
 import ATGrid from "../../components/ATGrid/ATGrid";
 import FilterBar from "../../components/FilterBar/FilterBar";
-import NotificationBell from "../../components/NotificationBell/NotificationBell";
 
 export default function ATSearch () {
     const { ats, loading, error, hasMore, filters, loadMore, applyFilters } = useATs ();
     console.log (ats);
 
     return (
-        <main className="min-h-screen bg-background px-4 py-10 sm:px-6 lg:px-8">
+        <main className="min-h-page bg-background px-4 py-10 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-7xl">
-                <header className="mb-8 flex items-start justify-between gap-4">
-                    <div>
-                        <h2 className="text-3xl font-bold text-text">Encontrá un acompañante terapéutico</h2>
-                        <p className="mt-2 text-text-secondary">Buscá profesionales según tu necesidad</p>
-                    </div>
-                    <NotificationBell/>
+                <header className="mb-8">
+                    <h2 className="text-3xl font-bold text-text">Encontrá un acompañante terapéutico</h2>
+                    <p className="mt-2 text-text-secondary">Buscá profesionales según tu necesidad</p>
                 </header>
                 <FilterBar filters={filters} onApply={applyFilters} disabled={loading}/>
                 <section>

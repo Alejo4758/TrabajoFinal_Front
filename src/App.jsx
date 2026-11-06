@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router';
 import AuthProvider from './context/AuthProvider';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import GuestRoute from './components/GuestRoute/GuestRoute';
+import AppLayout from './components/AppLayout/AppLayout';
 import Home from './Pages/Home/Home';
 import Login from './Pages/Login/Login';
 import RegisterAT from './Pages/RegisterAT/RegisterAT';
@@ -34,28 +35,30 @@ export default function App () {
             <Route path='/registerClient' element={<RegisterClient/>}/>
           </Route>
 
-          {/* Cualquier usuario con sesión */}
+          {/* Cualquier usuario con sesión. Todas estas páginas comparten la barra de navegación (AppLayout) */}
           <Route element={<ProtectedRoute/>}>
-            <Route path='/chat' element={<ChatPage/>}/>
-            <Route path='/searchAT' element={<ATSearch/>}/>
-            <Route path='/profileAT/at/:id' element={<ATProfile/>}/>
-          </Route>
+            <Route element={<AppLayout/>}>
+              <Route path='/chat' element={<ChatPage/>}/>
+              <Route path='/searchAT' element={<ATSearch/>}/>
+              <Route path='/profileAT/at/:id' element={<ATProfile/>}/>
 
-          {/* Agenda: cada rol ve su propia vista */}
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.AT, ROLES.CLIENT, ROLES.ADMIN]}/>}>
-            <Route path='/calendario' element={<Calendar/>}/>
-          </Route>
+              {/* Agenda: cada rol ve su propia vista */}
+              <Route element={<ProtectedRoute allowedRoles={[ROLES.AT, ROLES.CLIENT, ROLES.ADMIN]}/>}>
+                <Route path='/calendario' element={<Calendar/>}/>
+              </Route>
 
-          {/* Solo AT */}
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.AT]}/>}>
-            <Route path='/dashboardAT' element={<Dashboard/>}/>
-            <Route path='/linkRequests' element={<LinkRequests/>}/>
-            <Route path='/patient/:id' element={<PatientDetail/>}/>
-          </Route>
+              {/* Solo AT */}
+              <Route element={<ProtectedRoute allowedRoles={[ROLES.AT]}/>}>
+                <Route path='/dashboardAT' element={<Dashboard/>}/>
+                <Route path='/linkRequests' element={<LinkRequests/>}/>
+                <Route path='/patient/:id' element={<PatientDetail/>}/>
+              </Route>
 
-          {/* Solo ADMIN */}
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}/>}>
-            <Route path='/panelAdmin' element={<PanelAdmin/>}/>
+              {/* Solo ADMIN */}
+              <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}/>}>
+                <Route path='/panelAdmin' element={<PanelAdmin/>}/>
+              </Route>
+            </Route>
           </Route>
 
           {/* Cualquier otra dirección muestra el 404 en vez de una pantalla en blanco */}
