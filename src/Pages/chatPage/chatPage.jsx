@@ -289,7 +289,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex h-dvh bg-background text-text">
+    <div className="flex h-page bg-background text-text">
       {/* BARRA LATERAL: Lista de Conversaciones. En pantallas chicas se oculta al abrir un chat */}
       <aside
         className={`${

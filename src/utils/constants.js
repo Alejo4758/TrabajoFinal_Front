@@ -26,7 +26,10 @@ export const ICONS = {
   bell: "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9Zm4.3 13a1.94 1.94 0 0 0 3.4 0",
   close: "M6 6l12 12M18 6 6 18",
   home: "m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z",
-  credentials: "M12 16V4m0 0L8 8m4-4 4 4M5 20h14"
+  credentials: "M12 16V4m0 0L8 8m4-4 4 4M5 20h14",
+  logout: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9",
+  settings: "M4 21v-7m0-4V3m8 18v-9m0-4V3m8 18v-5m0-4V3M1 14h6m2-6h6m2 8h6",
+  help: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3m.08 4h.01"
 };
 
 export const AT_FEATURES = [
@@ -56,15 +59,31 @@ export const ROLE_ROUTES = {
   ADMIN: "/panelAdmin"
 };
 
-// Enlaces de navegación y roles que pueden verlos. Tienen que coincidir con los roles de cada ruta en App.jsx
+// Enlaces de navegación y roles que pueden verlos. Tienen que coincidir con los roles de cada ruta en App.jsx.
+// icon es el nombre del ícono en ICONS que muestra la barra de navegación (Navbar)
 export const NAV_LINKS = [
-  { to: "/searchAT", label: "Buscar acompañantes", roles: [ROLES.CLIENT] },
-  { to: "/dashboardAT", label: "Mi panel", roles: [ROLES.AT] },
-  { to: "/linkRequests", label: "Solicitudes", roles: [ROLES.AT] },
-  { to: "/panelAdmin", label: "Administración", roles: [ROLES.ADMIN] },
-  { to: "/calendario", label: "Agenda", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] },
-  { to: "/chat", label: "Mensajes", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] }
+  { to: "/searchAT", label: "Buscar acompañantes", icon: "search", roles: [ROLES.CLIENT] },
+  { to: "/dashboardAT", label: "Mi panel", icon: "home", roles: [ROLES.AT] },
+  { to: "/linkRequests", label: "Solicitudes", icon: "users", roles: [ROLES.AT] },
+  { to: "/panelAdmin", label: "Administración", icon: "shield", roles: [ROLES.ADMIN] },
+  { to: "/calendario", label: "Agenda", icon: "calendar", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] },
+  { to: "/chat", label: "Mensajes", icon: "chat", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] }
 ];
+
+// Opciones del menú del usuario (UserMenu) y roles que pueden verlas. Las que todavía no tienen página no llevan "to" y se muestran
+// deshabilitadas: cuando exista la página alcanza con agregarle acá su ruta (y la ruta en App.jsx, con los mismos roles)
+export const PROFILE_LINKS = [
+  { label: "Mi perfil", icon: "user", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] },
+  { label: "Configuración", icon: "settings", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] },
+  { label: "Ayuda", icon: "help", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] }
+];
+
+// Nombre de cada rol para mostrárselo al usuario
+export const ROLE_LABELS = {
+  CLIENT: "Solicitante",
+  AT: "Acompañante terapéutico",
+  ADMIN: "Administrador"
+};
 
 export const DEFAULT_ROUTE = "/";
 

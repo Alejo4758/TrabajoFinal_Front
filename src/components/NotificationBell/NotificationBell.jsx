@@ -52,7 +52,9 @@ export default function NotificationBell () {
     };
 
     return (
-        <div ref={containerRef} className="relative">
+        // En celulares el panel no se ubica respecto de la campana sino de la barra de navegación (sm:relative + right-4):
+        // ocupa casi todo el ancho y, como la campana ya no es el último botón, alineado a ella se saldría de la pantalla
+        <div ref={containerRef} className="sm:relative">
             <button type="button" onClick={() => setOpen (value => !value)} aria-haspopup="true" aria-expanded={open}
                 aria-label={unreadCount > 0 ? `Notificaciones (${unreadCount} sin leer)` : "Notificaciones"}
                 className="relative flex size-11 cursor-pointer items-center justify-center rounded-xl border border-border bg-surface text-text-secondary transition-colors hover:border-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
@@ -66,7 +68,7 @@ export default function NotificationBell () {
             </button>
 
             {open && (
-                <div className="absolute right-0 z-50 mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-surface shadow-xl shadow-primary/5">
+                <div className="absolute right-4 z-50 mt-2 w-[min(24rem,calc(100vw-2rem))] sm:right-0 overflow-hidden rounded-2xl border border-border bg-surface shadow-xl shadow-primary/5">
                     <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
                         <h2 className="text-sm font-semibold text-text">Notificaciones</h2>
                         {unreadCount > 0 && (

@@ -41,7 +41,7 @@ export default function ATProfile () {
     if (loading) return <LoadingScreen/>;
 
     if (error || !at) return (
-        <main className="flex min-h-screen items-center justify-center bg-background px-4">
+        <main className="flex min-h-page items-center justify-center bg-background px-4">
             <div className="text-center">
                 <p className="text-red-600 mb-4 font-medium">
                     {error || "No se encontró el perfil."}
@@ -86,14 +86,14 @@ export default function ATProfile () {
     const profileImage = at.image || "https://avatars.githubusercontent.com/u/217831763?s=400&v=4";
 
     return (
-        <main className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8 font-sans">
+        <main className="min-h-page bg-background px-4 py-8 sm:px-6 lg:px-8 font-sans">
             <div className="mx-auto max-w-6xl">
                 <button className="mb-8 text-sm font-bold text-text-secondary hover:text-primary transition-colors cursor-pointer w-fit" onClick={() => navigate ("/searchAT")}> 
                     Volver a la búsqueda
                 </button>
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     <section className="lg:col-span-4">
-                        <div className="sticky top-8 rounded-3xl border border-border bg-surface p-6 shadow-sm flex flex-col items-center text-center">
+                        <div className="sticky top-[calc(var(--spacing-navbar)+2rem)] rounded-3xl border border-border bg-surface p-6 shadow-sm flex flex-col items-center text-center">
                             <img className="w-36 h-36 rounded-full border-4 border-primary/10 object-cover mb-4" src={profileImage} alt={`Foto de ${at.name}`}/>
                             <h2 className="text-2xl font-bold text-text">
                                 {at.name} {at.lastName}

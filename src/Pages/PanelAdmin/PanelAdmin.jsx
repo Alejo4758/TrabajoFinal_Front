@@ -84,7 +84,7 @@ export default function PanelAdmin() {
   };
 
   return (
-    <main className="min-h-screen bg-background font-sans">
+    <main className="min-h-page bg-background font-sans">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <section className="mb-8">
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">
