@@ -114,13 +114,13 @@ export default function ValidationDetail ({ profile, onBack, onReview, reviewing
         </div>
         {localError && (<p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{localError}</p>)}
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-          <button className="rounded-xl border border-red-200 px-5 py-3 font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+          <button className="cursor-pointer rounded-xl border border-red-200 px-5 py-3 font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
            onClick={() => handleReview("REJECTED")}
            disabled={reviewing}
           >
             {reviewing ? "Procesando..." : "Rechazar solicitud"}
           </button>
-          <button className="rounded-xl bg-primary px-5 py-3 font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          <button className="cursor-pointer rounded-xl bg-primary px-5 py-3 font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             onClick={() => handleReview ("APPROVED")}
             disabled={reviewing || documents.length === 0}
           >
