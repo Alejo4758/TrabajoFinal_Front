@@ -6,6 +6,7 @@ import { subscribeToNotifications } from "../../services/notificationService";
 import { DEFAULT_ROUTE, ROLE_ROUTES } from "../../utils/constants";
 import { initials } from "../../utils/utils";
 import Icon from "../../components/Icon/Icon";
+import UserAvatar from "../../components/Avatar/Avatar";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -62,7 +63,12 @@ const formatDayLabel = (date) => {
   });
 };
 
-function Avatar({ name, isGroup = false, className = "size-11" }) {
+function Avatar({ name, image, isGroup = false, className = "size-11" }) {
+  // Con foto (solo en chats 1 a 1) se usa el avatar compartido, que vuelve a las iniciales si la imagen no carga
+  if (image && !isGroup) {
+    return <UserAvatar image={image} name={name} className={className} />;
+  }
+
   return (
     <div
       aria-hidden="true"
@@ -288,6 +294,12 @@ export default function ChatPage() {
     );
   };
 
+  // Foto del otro participante. Solo en chats 1 a 1: los grupos muestran su ícono
+  const getConversationImage = (conv) =>
+    conv.isGroup
+      ? null
+      : conv.users?.find((u) => u.userId !== myUserId)?.user?.profilePicture;
+
   return (
     <div className="flex h-page bg-background text-text">
       {/* BARRA LATERAL: Lista de Conversaciones. En pantallas chicas se oculta al abrir un chat */}
@@ -348,7 +360,11 @@ export default function ChatPage() {
                         isSelected ? "bg-primary-light" : "hover:bg-surface-alt"
                       }`}
                     >
-                      <Avatar name={title} isGroup={conv.isGroup} />
+                      <Avatar
+                        name={title}
+                        image={getConversationImage(conv)}
+                        isGroup={conv.isGroup}
+                      />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline justify-between gap-2">
                           <span
@@ -423,6 +439,7 @@ export default function ChatPage() {
               </button>
               <Avatar
                 name={getConversationTitle(activeConv)}
+                image={getConversationImage(activeConv)}
                 isGroup={activeConv.isGroup}
                 className="size-10"
               />
