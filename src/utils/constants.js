@@ -73,7 +73,7 @@ export const NAV_LINKS = [
 // Opciones del menú del usuario (UserMenu) y roles que pueden verlas. Las que todavía no tienen página no llevan "to" y se muestran
 // deshabilitadas: cuando exista la página alcanza con agregarle acá su ruta (y la ruta en App.jsx, con los mismos roles)
 export const PROFILE_LINKS = [
-  { label: "Mi perfil", icon: "user", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] },
+  { to: "/profile", label: "Mi perfil", icon: "user", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] },
   { label: "Configuración", icon: "settings", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] },
   { label: "Ayuda", icon: "help", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] }
 ];
@@ -84,6 +84,11 @@ export const ROLE_LABELS = {
   AT: "Acompañante terapéutico",
   ADMIN: "Administrador"
 };
+
+// Foto de perfil: los mismos formatos y tamaño máximo que valida el backend, para avisar antes de subir el archivo
+export const AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+export const AVATAR_MAX_MB = 5;
 
 export const DEFAULT_ROUTE = "/";
 
