@@ -10,6 +10,7 @@ import RegisterClient from './Pages/RegisterClient/RegisterClient';
 import ATSearch from './Pages/ATSearch/ATSearch';
 import ATProfile from './Pages/ATProfile/ATProfile';
 import ChatPage from './Pages/chatPage/chatPage';
+import User from './Pages/User/User';
 import PanelAdmin from './Pages/PanelAdmin/PanelAdmin';
 import Dashboard from './Pages/AT/Dashboard/Dashboard';
 import LinkRequests from './Pages/AT/LinkRequests/LinkRequests';
@@ -41,6 +42,7 @@ export default function App () {
               <Route path='/chat' element={<ChatPage/>}/>
               <Route path='/searchAT' element={<ATSearch/>}/>
               <Route path='/profileAT/at/:id' element={<ATProfile/>}/>
+              <Route path='/profile' element={<User/>}/>
 
               {/* Agenda: cada rol ve su propia vista */}
               <Route element={<ProtectedRoute allowedRoles={[ROLES.AT, ROLES.CLIENT, ROLES.ADMIN]}/>}>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { useAuth } from "../../hooks/useAuth";
 import { PROFILE_LINKS, ROLE_LABELS } from "../../utils/constants";
+import { shortName } from "../../utils/utils";
 import Avatar from "../Avatar/Avatar";
 import Icon from "../Icon/Icon";
 
@@ -40,8 +41,7 @@ export default function UserMenu () {
     }, [open]);
 
     const fullName = [user.name, user.lastName].filter (Boolean).join (" ");
-    // Para las iniciales van el primer nombre y el apellido: con dos nombres, initials tomaría las dos primeras palabras
-    const avatarName = [user.name?.trim ().split (" ")[0], user.lastName].filter (Boolean).join (" ");
+    const avatarName = shortName (user);
 
     const links = PROFILE_LINKS.filter (link => link.roles.includes (user.role));
 
@@ -51,13 +51,13 @@ export default function UserMenu () {
                 aria-label={fullName ? `Menú de ${fullName}` : "Menú de usuario"} title="Mi cuenta"
                 className="flex cursor-pointer rounded-full transition hover:ring-2 hover:ring-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
-                <Avatar image={user.image} name={avatarName} className="size-10 sm:size-11"/>
+                <Avatar image={user.profilePicture} name={avatarName} className="size-10 text-sm sm:size-11"/>
             </button>
 
             {open && (
                 <div className="absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded-2xl border border-border bg-surface shadow-xl shadow-primary/5">
                     <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-                        <Avatar image={user.image} name={avatarName}/>
+                        <Avatar image={user.profilePicture} name={avatarName}/>
                         <div className="min-w-0">
                             <p className="m-0 truncate text-sm font-semibold text-text">{fullName || "Mi cuenta"}</p>
                             <p className="m-0 truncate text-xs text-text-secondary">{user.email || ROLE_LABELS[user.role]}</p>
