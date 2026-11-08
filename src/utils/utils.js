@@ -96,6 +96,10 @@ export const normalize = text => text.normalize ("NFD").replace (/[\u0300-\u036f
 
 export const initials = name => name.split (" ").slice (0, 2).map (word => word[0]).join ("").toUpperCase ();
 
+// Nombre corto de una persona para las iniciales de su avatar: primer nombre y apellido.
+// Con el nombre completo, initials tomaría las dos primeras palabras ("Ana María Paz" daría AM en vez de AP)
+export const shortName = person => [person?.name?.trim ().split (" ")[0], person?.lastName].filter (Boolean).join (" ");
+
 export function formatDate(iso, options = { day: 'numeric', month: 'short', year: 'numeric' }) {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
   if (!m) return '—';
