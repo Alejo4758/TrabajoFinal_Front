@@ -39,6 +39,16 @@ export default function AuthProvider ({ children }) {
         setSession (null);
     }, []);
 
+    // Actualiza datos del usuario de la sesión (por ejemplo la foto de perfil) sin tener que volver a iniciar sesión.
+    // El id y el rol no se pueden cambiar por acá: tienen que seguir coincidiendo con el token
+    const updateUser = useCallback (changes => {
+        const current = restoreSession ();
+
+        if (current) saveSession (current.token, { ...current.user, ...changes, id: current.user.id, role: current.user.role });
+
+        setSession (restoreSession ());
+    }, []);
+
     // Cierra la sesión cuando vence el token, sin esperar a que el usuario recargue la página
     useEffect (() => {
         if (!session?.expiresAt) return;
@@ -68,7 +78,8 @@ export default function AuthProvider ({ children }) {
         isLoading: false,
         login,
         logout,
-    }), [session, login, logout]);
+        updateUser,
+    }), [session, login, logout, updateUser]);
 
     return (
         <AuthContext.Provider value={value}>
