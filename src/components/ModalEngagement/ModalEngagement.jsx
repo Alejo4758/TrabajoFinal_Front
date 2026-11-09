@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { sendLinkRequest } from '../../services/modalRequestService';
 import { useAuth } from '../../hooks/useAuth';
+import { useMyPatients } from '../../hooks/useMyPatients';
 import { DESCRIPTION_MAX, DESCRIPTION_MIN } from '../../utils/constants';
 import FormField from '../FormField/FormField';
 import Icon from "../Icon/Icon";
+import PatientForm from "../PatientForm/PatientForm";
+import PatientPicker from "../PatientPicker/PatientPicker";
 
 function Chip ({ id, selected, onClick, children }) {
   return (
@@ -28,11 +31,19 @@ export default function ModalEngagement ({ at, atId, onClose, onSuccess }) {
   const zones = at.locality ?? [];
   const programs = at.socialPrograms ?? [];
 
-  const [form, setForm] = useState({ description: "", locality: zones.length === 1 ? zones[0] : "", socialPrograms: [], otherCoverage: false });
+  // Personas a cargo del usuario: la solicitud siempre es para una de ellas
+  const { patients, loading: loadingPatients, error: patientsError, upsertPatient } = useMyPatients ();
+
+  const [form, setForm] = useState({ patientId: "", description: "", locality: zones.length === 1 ? zones[0] : "", socialPrograms: [], otherCoverage: false });
   const [errors, setErrors] = useState ({});
   const [serverError, setServerError] = useState ("");
   const [sending, setSending] = useState (false);
   const [sent, setSent] = useState (false);
+  // true mientras se carga una persona nueva: el formulario de la solicitud se reemplaza por el de la persona
+  const [addingPatient, setAddingPatient] = useState (false);
+
+  // Con una sola persona cargada no hace falta elegirla
+  const patientId = form.patientId || (patients.length === 1 ? String (patients[0].id) : "");
 
   useEffect(() => {
     const onKey = event => { if (event.key === 'Escape' && !sending) onClose(); };
@@ -66,8 +77,17 @@ export default function ModalEngagement ({ at, atId, onClose, onSuccess }) {
     clear ("coverage");
   };
 
+  // La persona recién cargada queda elegida y se vuelve al formulario de la solicitud, que conserva lo ya escrito
+  const handlePatientSaved = patient => {
+    upsertPatient (patient);
+    setForm (prev => ({ ...prev, patientId: String (patient.id) }));
+    clear ("patientId");
+    setAddingPatient (false);
+  };
+
   const validate = () => {
     const found = {};
+    if (!patientId) found.patientId = "Indicá para quién es el acompañamiento";
     const description = form.description.trim ();
     if (!description) found.description = "Contá brevemente el caso";
     else if (description.length < DESCRIPTION_MIN) found.description = `Escribí al menos ${DESCRIPTION_MIN} caracteres para que el profesional pueda entender el caso`;
@@ -90,8 +110,9 @@ export default function ModalEngagement ({ at, atId, onClose, onSuccess }) {
 
     try {
       const result = await sendLinkRequest ( atId, 
-        { 
-            description: form.description.trim (), 
+        {
+            patientId: Number (patientId),
+            description: form.description.trim (),
             locality: form.locality.trim (), 
             socialPrograms: form.socialPrograms, 
             otherCoverage: form.otherCoverage
@@ -148,6 +169,18 @@ export default function ModalEngagement ({ at, atId, onClose, onSuccess }) {
                 Entendido
             </button>
           </div>
+        ) : addingPatient ? (
+          <div className="space-y-6">
+            <div>
+              <h2 className="m-0 text-2xl font-bold text-text">
+                  ¿Para quién es el acompañamiento?
+              </h2>
+              <p className="m-0 mt-2 text-sm leading-relaxed text-text-secondary">
+                Cargá los datos de la persona que lo va a recibir. Quedan guardados para tus próximas solicitudes
+              </p>
+            </div>
+            <PatientForm idPrefix="link-patient" onSaved={handlePatientSaved} onCancel={() => setAddingPatient (false)}/>
+          </div>
         ) : (
           <form onSubmit={handleSubmit} noValidate className="space-y-6">
             <div className="flex items-start justify-between gap-4">
@@ -169,6 +202,8 @@ export default function ModalEngagement ({ at, atId, onClose, onSuccess }) {
                 {serverError}
               </div>
             )}
+
+            <PatientPicker id="link-patientId" label="¿Para quién es el acompañamiento?" patients={patients} loading={loadingPatients} loadError={patientsError} value={patientId} onChange={handleChange} onAdd={() => setAddingPatient (true)} error={errors.patientId}/>
 
             <div>
               <FormField as="textarea" id="description"

@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { getReceivedLinkRequests, respondLinkRequest } from "../../../services/modalRequestService";
 import { useAuth } from "../../../hooks/useAuth";
-import { formatRelativeTime, formatDateDetail, initials } from "../../../utils/utils";
+import { ageFromDate, formatRelativeTime, formatDateDetail, initials } from "../../../utils/utils";
+import { RELATIONSHIP_LABELS } from "../../../utils/constants";
 import Icon from "../../../components/Icon/Icon";
 
 const TABS = [
@@ -13,8 +14,18 @@ const TABS = [
 
 const fullName = person => [person?.name, person?.lastName].filter (Boolean).join (" ");
 
+// Quién envía la solicitud: la propia persona que va a recibir el acompañamiento, o alguien de su entorno en su nombre
+const describeSender = request => {
+  if (request.patient?.relationship === "SELF") return "Pide el acompañamiento para sí";
+  const sender = fullName (request.client) || "Un familiar";
+  const relationship = RELATIONSHIP_LABELS[request.patient?.relationship];
+  return relationship ? `La envía ${sender} (${relationship.toLowerCase ()})` : `La envía ${sender}`;
+};
+
 function RequestCard ({ request, responding, onRespond }) {
-  const name = fullName (request.client) || "Cliente";
+  // request.patient es quien va a recibir el acompañamiento; request.client, el titular de la cuenta que envía la solicitud
+  const name = fullName (request.patient) || fullName (request.client) || "Paciente";
+  const age = ageFromDate (request.patient?.dateOfBirth);
   const coverage = [...(request.socialPrograms ?? []), ...(request.otherCoverage ? ["Otra o ninguna"] : [])];
   const isPending = request.status === "PENDING";
 
@@ -26,8 +37,13 @@ function RequestCard ({ request, responding, onRespond }) {
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-semibold">
-            {name}
+            {name}{age != null && <span className="font-normal text-text-secondary">, {age} años</span>}
           </h3>
+          {request.patient && (
+            <p className="text-sm text-text-secondary">
+              {describeSender (request)}
+            </p>
+          )}
           <p className="text-sm text-text-muted" title={formatDateDetail (request.createdAt)}>
             Enviada {formatRelativeTime (request.createdAt)}
           </p>
@@ -119,7 +135,7 @@ export default function LinkRequests () {
   };
 
   const handleRespond = async (request, newStatus) => {
-    const name = fullName (request.client) || "este cliente";
+    const name = fullName (request.patient) || fullName (request.client) || "esta persona";
     if (newStatus === "REJECTED" && !window.confirm (`¿Rechazar la solicitud de ${name}?`)) return;
 
     setRespondingId (request.id);
