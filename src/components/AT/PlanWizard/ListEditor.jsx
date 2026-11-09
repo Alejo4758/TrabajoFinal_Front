@@ -1,17 +1,22 @@
 import { useState } from 'react';
 import { controlClass } from './planUi';
+import { newGoal } from '../../../utils/planModel';
 
 // Lista editable de textos: se pueden agregar, corregir y quitar elementos, y hay sugerencias para sumar con un clic.
 // Props: id, label, hint, items (string[]), onChange(items), placeholder, suggestions, maxLength, error
-export default function ListEditor({ id, label, hint, items, onChange, placeholder = 'Escribí y presioná Enter...', suggestions = [], maxLength = 300, error }) {
+// Con keyed, items es [{ id, text }] en vez de string[]: cada elemento conserva su id aunque se corrija el texto.
+// Lo usan los objetivos específicos, que los encuentros referencian por id
+export default function ListEditor({ id, label, hint, items, onChange, placeholder = 'Escribí y presioná Enter...', suggestions = [], maxLength = 300, error, keyed = false }) {
   const [draft, setDraft] = useState('');
 
-  const exists = (text) => items.some((item) => item.trim().toLowerCase() === text.trim().toLowerCase());
+  const textOf = (item) => (keyed ? item.text : item);
+
+  const exists = (text) => items.some((item) => textOf(item).trim().toLowerCase() === text.trim().toLowerCase());
 
   const add = (text) => {
     const clean = text.trim();
     if (!clean || exists(clean)) return;
-    onChange([...items, clean]);
+    onChange([...items, keyed ? newGoal(clean) : clean]);
   };
 
   const submitDraft = () => {
@@ -19,7 +24,7 @@ export default function ListEditor({ id, label, hint, items, onChange, placehold
     setDraft('');
   };
 
-  const update = (index, value) => onChange(items.map((item, i) => (i === index ? value : item)));
+  const update = (index, value) => onChange(items.map((item, i) => (i !== index ? item : keyed ? { ...item, text: value } : value)));
   const remove = (index) => onChange(items.filter((_, i) => i !== index));
 
   const available = suggestions.filter((s) => !exists(s));
@@ -32,10 +37,10 @@ export default function ListEditor({ id, label, hint, items, onChange, placehold
       {items.length > 0 && (
         <ul className="mt-3 space-y-2">
           {items.map((item, index) => (
-            <li key={index} className="flex items-start gap-2">
+            <li key={keyed ? item.id : index} className="flex items-start gap-2">
               <textarea
                 rows={2}
-                value={item}
+                value={textOf(item)}
                 maxLength={maxLength}
                 onChange={(event) => update(index, event.target.value)}
                 aria-label={`${label}, elemento ${index + 1}`}
@@ -44,7 +49,7 @@ export default function ListEditor({ id, label, hint, items, onChange, placehold
               <button
                 type="button"
                 onClick={() => remove(index)}
-                aria-label={`Quitar: ${item.slice(0, 50)}`}
+                aria-label={`Quitar: ${textOf(item).slice(0, 50)}`}
                 className="mt-0.5 shrink-0 cursor-pointer rounded-lg p-2.5 text-text-secondary transition hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-primary/30"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">

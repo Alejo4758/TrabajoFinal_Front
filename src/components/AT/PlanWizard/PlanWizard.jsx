@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { STEP_IDS, emptyPlan, newStage, normalizePlan, validatePlan, validatePlanStep } from '../../../utils/planModel';
-import { DataStep, EvaluationStep, FamilyStep, GoalsStep, RationaleStep, ReviewStep, StagesStep } from './steps';
+import { DataStep, EvaluationStep, FamilyStep, GoalsStep, RationaleStep, ReviewStep, StagesStep } from './Steps';
+import { useAuth } from '../../../hooks/useAuth';
+import { useUnsavedChangesGuard } from '../../../hooks/useUnsavedChangesGuard';
 import ActionButton from '../ActionButton/ActionButton';
 
 const STEPS = [
@@ -28,7 +30,8 @@ function focusTargetFor (key) {
 }
 
 export default function PlanWizard ({ patient, initialPlan, onSave, onCancel, onSaved }) {
-  const [plan, setPlanState] = useState (() => (initialPlan ? JSON.parse (JSON.stringify (normalizePlan (initialPlan))) : emptyPlan ()));
+  // Un plan nuevo arranca con el diagnóstico que la familia cargó para el paciente (el profesional lo puede corregir)
+  const [plan, setPlanState] = useState (() => (initialPlan ? JSON.parse (JSON.stringify (normalizePlan (initialPlan))) : { ...emptyPlan (), diagnosis: patient?.diagnosis ?? "" }));
   const [stepIndex, setStepIndex] = useState (0);
   const [visited, setVisited] = useState ([0]);
   const [errors, setErrors] = useState ({});
@@ -37,18 +40,25 @@ export default function PlanWizard ({ patient, initialPlan, onSave, onCancel, on
   const [serverError, setServerError] = useState("");
   const [confirmCancel, setConfirmCancel] = useState (false);
 
-  const savedSnapshot = useRef (JSON.stringify (plan));
+  // El plan tal como quedó guardado por última vez: compararlo con el actual dice si hay cambios sin guardar
+  const [savedSnapshot, setSavedSnapshot] = useState (() => JSON.stringify (plan));
+
   const headingRef = useRef (null);
   const firstRender = useRef (true);
 
-  const user = JSON.parse (localStorage.getItem ("user") || "null");
+  const { user } = useAuth ();
   const authorName = [user?.name, user?.lastName].filter (Boolean).join (" ") || "Acompañante terapéutico";
 
 
   const step = STEPS[stepIndex];
   const isLast = stepIndex === STEPS.length - 1;
-  const dirty = JSON.stringify (plan) !== savedSnapshot.current;
+  const dirty = JSON.stringify (plan) !== savedSnapshot;
   const problems = validatePlan (plan);
+  // Hay un solo plan por acompañamiento y cada guardado lo reemplaza: guardar un plan vigente como borrador lo dejaría sin vigencia
+  const isActivePlan = plan.status === "active";
+
+  // El botón Cancelar ya pide confirmación; esto cubre recargar o cerrar la pestaña y los enlaces a otras páginas de la app
+  useUnsavedChangesGuard (dirty);
 
   useEffect(() => {
     if (firstRender.current) {
@@ -109,7 +119,7 @@ export default function PlanWizard ({ patient, initialPlan, onSave, onCancel, on
       if (status === "draft") {
         const next = { ...plan, id: saved.id, status: "draft" };
         setPlanState (next);
-        savedSnapshot.current = JSON.stringify (next);
+        setSavedSnapshot (JSON.stringify (next));
         setNotice ("Borrador guardado");
       }
     } catch (err) {
@@ -190,7 +200,7 @@ export default function PlanWizard ({ patient, initialPlan, onSave, onCancel, on
             Hay cambios sin guardar
           </p>
           <p className="m-0 mt-1">
-            Si salís ahora, se pierden. Podés guardarlos como borrador antes
+            Si salís ahora, se pierden.{!isActivePlan && " Podés guardarlos como borrador antes"}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <ActionButton variant="secondary" onClick={() => setConfirmCancel (false)}>
@@ -207,9 +217,11 @@ export default function PlanWizard ({ patient, initialPlan, onSave, onCancel, on
           Cancelar
         </button>
         <div className="flex flex-col-reverse gap-2 sm:flex-row">
-          <ActionButton variant="secondary" disabled={saving} onClick={() => save("draf")}>
-            {saving ? "Guardando..." : "Guardar borrador"}
-          </ActionButton>
+          {!isActivePlan && (
+            <ActionButton variant="secondary" disabled={saving} onClick={() => save("draft")}>
+              {saving ? "Guardando..." : "Guardar borrador"}
+            </ActionButton>
+          )}
           {stepIndex > 0 && <ActionButton variant="secondary" disabled={saving} onClick={() => goToStep (stepIndex - 1)}>Anterior</ActionButton>}
           {isLast ? (
             <ActionButton disabled={saving} onClick={() => save('active')}>

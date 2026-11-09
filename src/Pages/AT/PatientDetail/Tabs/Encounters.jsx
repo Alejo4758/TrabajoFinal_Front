@@ -1,10 +1,14 @@
 import { useMemo, useState } from "react";
 import { CardPatientDetail } from "../../../../components/AT/CardPatientDetail/CardPatientDetail";
 import { normalize, formatDate } from "../../../../utils/utils";
+import { getPlanGoals } from "../../../../utils/planModel";
 import ActionButton from "../../../../components/AT/ActionButton/ActionButton";
 import EmptyState from "../../../../components/AT/EmptyState/EmptyState";
 import Pill from "../../../../components/AT/Pill/Pill";
 import Field from "../../../../components/AT/Field/Field"
+
+// Lo que se muestra cuando un encuentro referencia un objetivo que después se quitó del plan
+const REMOVED_GOAL = "Objetivo que ya no está en el plan";
 
 export default function Encounters ({ patient }) {
     const [objective, setObjective] = useState ("");
@@ -21,12 +25,17 @@ export default function Encounters ({ patient }) {
 
     const hasFilters = Boolean (objective || query || from || to);
 
-    const objectives = useMemo(() => [...new Set ([...(patient.plan?.specificGoals ?? []), ...patient.sessions.flatMap (s => s.goals)])], [patient.plan, patient.sessions]);
+    // Objetivos específicos del plan ({ id, text }): están dentro de cada ámbito (plan.stages), no en la raíz del plan.
+    // Cada encuentro guarda en goalIds el id de los objetivos trabajados, no su texto: así, si el profesional corrige la redacción
+    // de un objetivo, los encuentros ya registrados siguen vinculados a él. El filtro (objective) también es un id
+    const objectives = useMemo (() => getPlanGoals (patient.plan), [patient.plan]);
+
+    const goalText = id => objectives.find (goal => goal.id === id)?.text ?? REMOVED_GOAL;
 
     const filtered = useMemo (() => {
         const term = normalize (query.trim ());
         return patient.sessions.filter (s => {
-            if (objective && !s.goals.includes (objective)) return false;
+            if (objective && !s.goalIds.includes (objective)) return false;
             if (from && s.date < from) return false;
             if (to && s.date > to) return false;
             if (term && !normalize ([...s.activities, s.observations].join ("")).includes (term)) return false;
@@ -54,8 +63,8 @@ export default function Encounters ({ patient }) {
                                 Todos
                             </option>
                             {objectives.map (goal => (
-                                <option key={goal} value={goal}>
-                                    {goal}
+                                <option key={goal.id} value={goal.id}>
+                                    {goal.text}
                                 </option>
                             ))}
                         </select>
@@ -108,9 +117,9 @@ export default function Encounters ({ patient }) {
                                             Objetivos trabajados
                                         </h3>
                                         <div className="flex flex-wrap gap-2">
-                                            {session.goals.map (goal => (
-                                                <Pill key={goal}>
-                                                    {goal}
+                                            {session.goalIds.map (goalId => (
+                                                <Pill key={goalId}>
+                                                    {goalText (goalId)}
                                                 </Pill>
                                             ))}
                                         </div>

@@ -12,7 +12,7 @@ const buildInitialForm = (activity, defaultDate) => {
     title: safeText (activity?.title),
     type: activity?.type in ACTIVITY_TYPES ? activity.type : "SESSION",
     state: activity?.state in ACTIVITY_STATES ? activity.state : "CONFIRMED",
-    userId: activity?.user?.id != null ? String (activity.user.id) : activity?.userId != null ? String (activity.userId) : "",
+    patientId: activity?.patient?.id != null ? String (activity.patient.id) : activity?.patientId != null ? String (activity.patientId) : "",
     date: start ? dateKey (start) : defaultDate,
     startTime: start ? timeValue (start) : "09:00",
     endTime: end ? timeValue (end) : "10:00",
@@ -22,8 +22,12 @@ const buildInitialForm = (activity, defaultDate) => {
 };
 
 // Modal de creación / edición. activity = null crea; con activity edita (o reprograma)
-export default function ActivityModal ({ activity, defaultDate, clients, holidays, onClose, onSaved }) {
+export default function ActivityModal ({ activity, defaultDate, patients, holidays, onClose, onSaved }) {
   const editing = Boolean (activity?.id);
+
+  // Si la actividad ya tiene un paciente que no está en la lista de vinculados (por ejemplo, su acompañamiento finalizó),
+  // se lo agrega igual para que el selector lo muestre y no se pierda al guardar
+  const patientOptions = activity?.patient?.id != null && !patients.some (patient => patient.id === activity.patient.id) ? [...patients, activity.patient] : patients;
 
   const [form, setForm] = useState (() => buildInitialForm (activity, defaultDate));
   const [errors, setErrors] = useState ({});
@@ -67,7 +71,8 @@ export default function ActivityModal ({ activity, defaultDate, clients, holiday
     setErrors (found);
     if (Object.keys (found).length > 0) return;
 
-    // El AT dueño de la agenda sale del token: nunca se envía profileATId
+    // El AT dueño de la agenda sale del token: nunca se envía profileATId.
+    // Tampoco el titular de la cuenta del paciente: el backend lo deduce del paciente elegido
     const payload = {
       title: form.title.trim (),
       type: form.type,
@@ -76,7 +81,7 @@ export default function ActivityModal ({ activity, defaultDate, clients, holiday
       finishDate: end.toISOString (),
       ubication: form.ubication.trim () || null,
       description: form.description.trim () || null,
-      userId: form.userId ? Number (form.userId) : null,
+      patientId: form.patientId ? Number (form.patientId) : null,
       ...(force ? { force: true } : {}),
     };
 
@@ -165,9 +170,9 @@ export default function ActivityModal ({ activity, defaultDate, clients, holiday
           </div>
 
           <div>
-            <FormField as="select" id="activity-userId" name="userId" label="Paciente" required={false} value={form.userId} onChange={handleChange} hint="Dejalo vacío para un recordatorio personal">
+            <FormField as="select" id="activity-patientId" name="patientId" label="Paciente" required={false} value={form.patientId} onChange={handleChange} hint="Dejalo vacío para un recordatorio personal">
               <option value="">Sin paciente</option>
-              {clients.map (client => <option key={client.id} value={client.id}>{fullName (client) || `Paciente ${client.id}`}</option>)}
+              {patientOptions.map (patient => <option key={patient.id} value={patient.id}>{fullName (patient) || `Paciente ${patient.id}`}</option>)}
             </FormField>
           </div>
 

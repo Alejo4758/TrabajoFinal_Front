@@ -31,11 +31,13 @@ const request = async (path, token, options = {}) => {
 };
 
 // Envía la solicitud al backend. El backend la guarda y le manda una notificación al AT con los datos del caso
-// payload = { description, locality, socialPrograms: string[], otherCoverage: boolean }
+// payload = { patientId, description, locality, socialPrograms: string[], otherCoverage: boolean }
+// patientId es la persona para la que se pide el acompañamiento: el backend verifica que sea una de las que cargó quien la envía.
 // El cliente que envía la solicitud sale del token (no del body), así nadie puede mandarla en nombre de otro
 export const sendLinkRequest = async (atId, payload, token) => {
   const body = {
     atId: Number (atId),
+    patientId: Number (payload.patientId),
     description: payload.description,
     locality: payload.locality,
     socialPrograms: payload.socialPrograms,

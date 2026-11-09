@@ -7,11 +7,14 @@
 //   diagnosis, settings: ['home', 'school', 'community'], weeklyHours,
 //   rationale,                          // fundamentación
 //   generalGoals: string[], areas: string[],
-//   stages: [{ id, name, setting, period, frequency, specificGoals: string[], activities: string[], strategies: string[] }],
+//   stages: [{ id, name, setting, period, frequency, specificGoals: [{ id, text }], activities: string[], strategies: string[] }],
 //   familyTeam: string[],               // trabajo con la familia y el equipo
 //   evaluation: { criteria: string[], reportsFrequency, notes },
 //   atRole,                             // rol del acompañante (opcional)
 // }
+//
+// Los objetivos específicos son { id, text } y no un texto suelto porque los encuentros los referencian: se vinculan por el id,
+// que no cambia aunque el profesional corrija la redacción del objetivo.
 
 export const SETTINGS = [
   { value: 'home', label: 'Domiciliario', hint: 'En el hogar de la persona acompañada' },
@@ -114,6 +117,16 @@ export const SUGGESTIONS = {
 // ---------- Utilidades ----------
 export const newId = () => `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
+// Objetivo específico nuevo. crypto.randomUUID solo existe en contextos seguros (HTTPS o localhost): si se abre la app
+// por HTTP desde otro dispositivo de la red, se usa newId
+export const newGoal = (text) => ({ id: globalThis.crypto?.randomUUID?.() ?? newId(), text });
+
+// Objetivos específicos de un ámbito como { id, text }. Los planes guardados antes de que tuvieran id los traen como texto suelto:
+// se les da un id que sale del ámbito y de la posición, así es el mismo cada vez que se carga el plan. Un id al azar cambiaría
+// en cada carga y los encuentros no tendrían a qué vincularse hasta que el plan se volviera a guardar
+const normalizeGoals = (stage) =>
+  (stage.specificGoals ?? []).map((goal, index) => (typeof goal === 'string' ? { id: `${stage.id}-g${index + 1}`, text: goal } : goal));
+
 export function newStage(setting = 'home') {
   return { id: newId(), name: `Ámbito ${settingLabel(setting).toLowerCase()}`, setting, period: '', frequency: '', specificGoals: [], activities: [], strategies: [] };
 }
@@ -133,9 +146,14 @@ export function emptyPlan() {
 // { generalGoal, specificGoals, areas, activities, strategies, startDate, reviewDate }.
 // normalizePlan los convierte a la forma actual (con un único ámbito) para poder verlos y editarlos.
 // Los datos que el formato viejo no tenía (modalidad, fundamentación, evaluación) quedan vacíos: se completan al editar.
+// En los dos casos los objetivos específicos salen como { id, text } (ver normalizeGoals).
 export function normalizePlan(plan) {
   if (!plan) return null;
-  if (Array.isArray(plan.stages)) return plan; // ya tiene la forma actual
+  if (Array.isArray(plan.stages)) {
+    // Ya tiene la forma actual: solo puede faltar pasar los objetivos específicos a { id, text }
+    return { ...plan, stages: plan.stages.map((stage) => ({ ...stage, specificGoals: normalizeGoals(stage) })) };
+  }
+  const legacyStage = { id: 's1', specificGoals: plan.specificGoals ?? [] };
   return {
     id: plan.id, status: plan.status ?? 'active',
     validFrom: plan.startDate ?? '', validUntil: plan.reviewDate ?? '',
@@ -143,14 +161,14 @@ export function normalizePlan(plan) {
     generalGoals: plan.generalGoal ? [plan.generalGoal] : [], areas: plan.areas ?? [],
     stages: [{
       id: 's1', name: 'Plan de trabajo', setting: 'home', period: '', frequency: '',
-      specificGoals: plan.specificGoals ?? [], activities: plan.activities ?? [], strategies: plan.strategies ?? [],
+      specificGoals: normalizeGoals(legacyStage), activities: plan.activities ?? [], strategies: plan.strategies ?? [],
     }],
     familyTeam: [], evaluation: { criteria: [], reportsFrequency: '', notes: '' }, atRole: '',
   };
 }
 
-// Objetivos y actividades de todos los ámbitos (sin repetidos). Los usa el registro de encuentros.
-export const getPlanGoals = (plan) => [...new Set((normalizePlan(plan)?.stages ?? []).flatMap((s) => s.specificGoals))];
+// Objetivos específicos ({ id, text }) y actividades de todos los ámbitos. Los usa el registro de encuentros.
+export const getPlanGoals = (plan) => (normalizePlan(plan)?.stages ?? []).flatMap((s) => s.specificGoals);
 export const getPlanActivities = (plan) => [...new Set((normalizePlan(plan)?.stages ?? []).flatMap((s) => s.activities))];
 
 // ---------- Validación por paso ----------

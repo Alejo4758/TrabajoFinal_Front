@@ -5,7 +5,7 @@ import ListEditor from './ListEditor';
 
 function FieldError ({ id, message }) {
   if (!message) return null;
-  return <p className="mt-1.5 text-sm text-red-600">{message}</p>;
+  return <p id={id} className="mt-1.5 text-sm text-red-600">{message}</p>;
 }
 
 const errorClass = error => (error ? "border-red-600" : "");
@@ -178,7 +178,7 @@ function StageEditor({ stage, index, onChange, onRemove, errors, canRemove }) {
       </div>
 
       <div className="mt-6 space-y-7">
-        <ListEditor id={`stage-${stage.id}-goals`} label="Objetivos específicos" hint="Objetivos concretos de este ámbito. Son los que después vas a poder marcar al registrar cada encuentro." items={stage.specificGoals} onChange={(specificGoals) => set({ specificGoals })} suggestions={suggestions('specificGoals')} error={key('goals')} />
+        <ListEditor keyed id={`stage-${stage.id}-goals`} label="Objetivos específicos" hint="Objetivos concretos de este ámbito. Son los que después vas a poder marcar al registrar cada encuentro." items={stage.specificGoals} onChange={(specificGoals) => set({ specificGoals })} suggestions={suggestions('specificGoals')} error={key('goals')} />
         <ListEditor id={`stage-${stage.id}-activities`} label="Actividades propuestas" items={stage.activities} onChange={(activities) => set({ activities })} suggestions={suggestions('activities')} error={key('work')} />
         <ListEditor id={`stage-${stage.id}-strategies`} label="Estrategias" items={stage.strategies} onChange={(strategies) => set({ strategies })} suggestions={suggestions('strategies')} />
       </div>

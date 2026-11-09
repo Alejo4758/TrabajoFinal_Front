@@ -1,3 +1,4 @@
+import { TREATMENT_STATUS_LABELS } from "../utils/constants";
 import { formatRelativeTime } from "../utils/utils";
 
 const BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace (/\/+$/, "");
@@ -37,10 +38,11 @@ const toDashboard = data => ({
     const lastActivity = parseDate (patient.lastActivity);
     const nextMeeting = parseDate (patient.nextMeeting);
     return {
+      // Es el id del paciente (no el del usuario titular de la cuenta): con él se abre /patient/:id
       id: patient.id,
       name: fullName (patient),
       lastActivity: lastActivity ? formatRelativeTime (lastActivity) : "Sin actividad",
-      status: "Activo",
+      status: TREATMENT_STATUS_LABELS[patient.status] ?? "Activo",
       nextMeeting: nextMeeting ? `${formatDay (nextMeeting)} ${formatTime (nextMeeting)}` : null,
     };
   }),
@@ -51,7 +53,8 @@ const toDashboard = data => ({
       id: appointment.id,
       day: formatDay (start),
       time: formatTime (start),
-      patient: fullName (appointment.client),
+      // Los recordatorios no tienen paciente: se muestra su título
+      patient: fullName (appointment.patient) || appointment.title || "",
       type: ACTIVITY_TYPES[appointment.type] ?? appointment.title ?? "Encuentro",
     }];
   }),

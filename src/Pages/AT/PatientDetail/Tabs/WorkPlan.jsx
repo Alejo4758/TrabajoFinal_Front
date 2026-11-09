@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CardPatientDetail } from "../../../../components/AT/CardPatientDetail/CardPatientDetail";
 import { PrintablePlan } from "../../../../components/AT/PlanWizard/PlanDocument";
 import { formatDate } from "../../../../utils/utils";
 import { savePlan } from "../../../../services/planService";
-import { frequencyLabel, settingLabel } from "../../../../utils/planModel";
+import { useAuth } from "../../../../hooks/useAuth";
+import { frequencyLabel, normalizePlan, settingLabel } from "../../../../utils/planModel";
 import ActionButton  from "../../../../components/AT/ActionButton/ActionButton";
 import Pill from "../../../../components/AT/Pill/Pill";
 import EmptyState from "../../../../components/AT/EmptyState/EmptyState";
@@ -11,12 +12,14 @@ import BulletList from "../../../../components/AT/BulletList/BulletList";
 import PlanWizard from "../../../../components/AT/PlanWizard/PlanWizard";
 
 export default function WorkPlan ({ patient, onPlanSaved }) {
+    const { token, user } = useAuth ();
+
     const [editing, setEditing] = useState (false);
     const [savedPlan, setSavedPlan] = useState (null);
 
-    const plan = savedPlan ?? patient.plan;
+    // normalizePlan deja los objetivos específicos como { id, text }, también en los planes guardados cuando eran texto suelto
+    const plan = useMemo (() => normalizePlan (savedPlan ?? patient.plan), [savedPlan, patient.plan]);
 
-    const user = JSON.parse (localStorage.getItem ("user") || "null");
     const authorName = [user?.name, user?.lastName].filter (Boolean).join (" ") || "Acompañante terapéutico";
 
     const handleSaved = saved => {
@@ -27,7 +30,7 @@ export default function WorkPlan ({ patient, onPlanSaved }) {
 
     if (editing) {
         return (
-            <PlanWizard patient={patient} initialPlan={plan} onSave={draft => savePlan (patient.id, draft)} onSaved={handleSaved} onCancel={() => setEditing (false)}/>
+            <PlanWizard patient={patient} initialPlan={plan} onSave={draft => savePlan (patient.id, draft, token)} onSaved={handleSaved} onCancel={() => setEditing (false)}/>
         );
     }
 
@@ -146,11 +149,11 @@ export default function WorkPlan ({ patient, onPlanSaved }) {
                         <CardPatientDetail title={"Objetivos específicos"}>
                             <ol className="space-y-3">
                                 {stage.specificGoals.map ((goal, index) => (
-                                    <li key={goal} className="flex gap-3 text-sm text-text-secondary">
+                                    <li key={goal.id} className="flex gap-3 text-sm text-text-secondary">
                                         <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">
                                             {index + 1}
                                         </span>
-                                        {goal}
+                                        {goal.text}
                                     </li>
                                 ))}
                             </ol>
