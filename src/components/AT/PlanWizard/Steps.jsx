@@ -5,7 +5,7 @@ import ListEditor from './ListEditor';
 
 function FieldError ({ id, message }) {
   if (!message) return null;
-  return <p className="mt-1.5 text-sm text-red-600">{message}</p>;
+  return <p id={id} className="mt-1.5 text-sm text-red-600">{message}</p>;
 }
 
 const errorClass = error => (error ? "border-red-600" : "");

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { STEP_IDS, emptyPlan, newStage, normalizePlan, validatePlan, validatePlanStep } from '../../../utils/planModel';
-import { DataStep, EvaluationStep, FamilyStep, GoalsStep, RationaleStep, ReviewStep, StagesStep } from './steps';
+import { DataStep, EvaluationStep, FamilyStep, GoalsStep, RationaleStep, ReviewStep, StagesStep } from './Steps';
 import ActionButton from '../ActionButton/ActionButton';
 
 const STEPS = [
@@ -49,6 +49,8 @@ export default function PlanWizard ({ patient, initialPlan, onSave, onCancel, on
   const isLast = stepIndex === STEPS.length - 1;
   const dirty = JSON.stringify (plan) !== savedSnapshot.current;
   const problems = validatePlan (plan);
+  // Hay un solo plan por acompañamiento y cada guardado lo reemplaza: guardar un plan vigente como borrador lo dejaría sin vigencia
+  const isActivePlan = plan.status === "active";
 
   useEffect(() => {
     if (firstRender.current) {
@@ -190,7 +192,7 @@ export default function PlanWizard ({ patient, initialPlan, onSave, onCancel, on
             Hay cambios sin guardar
           </p>
           <p className="m-0 mt-1">
-            Si salís ahora, se pierden. Podés guardarlos como borrador antes
+            Si salís ahora, se pierden.{!isActivePlan && " Podés guardarlos como borrador antes"}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <ActionButton variant="secondary" onClick={() => setConfirmCancel (false)}>
@@ -207,9 +209,11 @@ export default function PlanWizard ({ patient, initialPlan, onSave, onCancel, on
           Cancelar
         </button>
         <div className="flex flex-col-reverse gap-2 sm:flex-row">
-          <ActionButton variant="secondary" disabled={saving} onClick={() => save("draf")}>
-            {saving ? "Guardando..." : "Guardar borrador"}
-          </ActionButton>
+          {!isActivePlan && (
+            <ActionButton variant="secondary" disabled={saving} onClick={() => save("draft")}>
+              {saving ? "Guardando..." : "Guardar borrador"}
+            </ActionButton>
+          )}
           {stepIndex > 0 && <ActionButton variant="secondary" disabled={saving} onClick={() => goToStep (stepIndex - 1)}>Anterior</ActionButton>}
           {isLast ? (
             <ActionButton disabled={saving} onClick={() => save('active')}>

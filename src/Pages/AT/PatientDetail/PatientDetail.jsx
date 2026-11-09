@@ -74,7 +74,7 @@ export default function PatientDetail () {
                     </p>
                     <div className="mt-4 flex flex-wrap justify-center gap-3">
                         <button type="button" onClick={load} className="cursor-pointer rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/30">
-                            Reintertar
+                            Reintentar
                         </button>
                         <Link to="/dashboardAT" className="rounded-xl border border-border px-5 py-2.5 text-sm font-semibold hover:bg-surface-alt">
                             Volver
@@ -127,7 +127,7 @@ export default function PatientDetail () {
                                 const active = tab.id === activeTab.id;
                                 return (
                                     <li key={tab.id}>
-                                        <Link to={`?tab=${tab.id}`} replace className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${active ? "boder-primary text-primary" : "border-transparent text-text-secondary hover:text-text"}`}>
+                                        <Link to={`?tab=${tab.id}`} replace className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${active ? "border-primary text-primary" : "border-transparent text-text-secondary hover:text-text"}`}>
                                             {tab.label}
                                         </Link>
                                     </li>
