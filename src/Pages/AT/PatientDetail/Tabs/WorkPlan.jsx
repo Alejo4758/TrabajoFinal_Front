@@ -3,6 +3,7 @@ import { CardPatientDetail } from "../../../../components/AT/CardPatientDetail/C
 import { PrintablePlan } from "../../../../components/AT/PlanWizard/PlanDocument";
 import { formatDate } from "../../../../utils/utils";
 import { savePlan } from "../../../../services/planService";
+import { useAuth } from "../../../../hooks/useAuth";
 import { frequencyLabel, settingLabel } from "../../../../utils/planModel";
 import ActionButton  from "../../../../components/AT/ActionButton/ActionButton";
 import Pill from "../../../../components/AT/Pill/Pill";
@@ -11,12 +12,13 @@ import BulletList from "../../../../components/AT/BulletList/BulletList";
 import PlanWizard from "../../../../components/AT/PlanWizard/PlanWizard";
 
 export default function WorkPlan ({ patient, onPlanSaved }) {
+    const { user } = useAuth ();
+
     const [editing, setEditing] = useState (false);
     const [savedPlan, setSavedPlan] = useState (null);
 
     const plan = savedPlan ?? patient.plan;
 
-    const user = JSON.parse (localStorage.getItem ("user") || "null");
     const authorName = [user?.name, user?.lastName].filter (Boolean).join (" ") || "Acompañante terapéutico";
 
     const handleSaved = saved => {
