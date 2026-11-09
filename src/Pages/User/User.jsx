@@ -1,19 +1,24 @@
 import { useRef, useState } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useAuth } from "../../hooks/useAuth";
 import { uploadAvatar } from "../../services/userService";
-import { AVATAR_MAX_MB, AVATAR_TYPES, ROLES, ROLE_LABELS } from "../../utils/constants";
-import { formatDate, formatDateDetail, shortName } from "../../utils/utils";
+import { AVATAR_MAX_MB, AVATAR_TYPES, PROFILE_EDIT_PARAM, PROFILE_FIELD_LABELS, PROFILE_ROUTE, ROLES, ROLE_LABELS } from "../../utils/constants";
+import { formatDateDetail, shortName } from "../../utils/utils";
 import Avatar from "../../components/Avatar/Avatar";
 import Pill from "../../components/AT/Pill/Pill";
 import { InfoRow } from "../../components/AT/InfoRow/InfoRow";
+import ProfessionalProfileSection from "../../components/ProfessionalProfileForm/ProfessionalProfileSection";
 
 const CARD = "rounded-3xl border border-border bg-surface p-6 shadow-sm sm:p-8";
 
-// Perfil del usuario con sesión iniciada. Los datos salen de la sesión (los que devolvió el login), así que no hace falta pedirlos.
-// Lo único que se puede cambiar por ahora es la foto: el backend todavía no tiene un endpoint para editar el resto
+// Perfil del usuario con sesión iniciada. Los datos de la cuenta salen de la sesión (los que devolvió el login).
+// Todos pueden cambiar su foto; el A.T. además completa y edita su perfil profesional (ProfessionalProfileSection)
 export default function User () {
     const { user, token, updateUser } = useAuth ();
+    const [searchParams] = useSearchParams ();
+
+    // El formulario del perfil profesional está abierto (lo maneja ProfessionalProfileSection con ?editar=profesional)
+    const editingProfessional = searchParams.get (PROFILE_EDIT_PARAM.name) === PROFILE_EDIT_PARAM.value;
 
     const [uploading, setUploading] = useState (false);
     const [error, setError] = useState ("");
@@ -22,6 +27,11 @@ export default function User () {
 
     const fullName = [user.name, user.lastName].filter (Boolean).join (" ");
     const profileAT = user.role === ROLES.AT ? user.profileAT : null;
+
+    // Datos del perfil profesional que faltan (los calcula el backend al iniciar sesión). A esta página lleva el aviso de la barra
+    const missingFields = profileAT && user.isProfileIncomplete === true
+        ? (user.missingProfileFields ?? []).map (field => PROFILE_FIELD_LABELS[field]).filter (Boolean)
+        : [];
 
     const handleFileChange = async event => {
         const file = event.target.files?.[0];
@@ -64,6 +74,26 @@ export default function User () {
         <main className="min-h-page bg-background px-4 py-8 font-sans sm:px-6 lg:px-8">
             <div className="mx-auto max-w-3xl space-y-6">
                 <h1 className="text-3xl font-bold text-text">Mi perfil</h1>
+
+                {profileAT && user.isProfileIncomplete === true && (
+                    <section aria-labelledby="profile-incomplete-title" className="rounded-2xl border border-red-200 bg-danger-light p-5 text-sm text-red-800">
+                        <h2 id="profile-incomplete-title" className="font-semibold">Tu perfil profesional está incompleto</h2>
+                        <p className="mt-1">Completalo para que las familias tengan toda tu información.</p>
+                        {missingFields.length > 0 && (
+                            <>
+                                <p className="mt-3 font-medium">Te falta cargar:</p>
+                                <ul className="mt-1 list-inside list-disc space-y-0.5">
+                                    {missingFields.map (label => <li key={label}>{label}</li>)}
+                                </ul>
+                            </>
+                        )}
+                        {!editingProfessional && (
+                            <Link to={PROFILE_ROUTE} className="mt-4 inline-flex rounded-xl bg-danger px-4 py-2 font-semibold text-white transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-danger/40">
+                                Completar ahora
+                            </Link>
+                        )}
+                    </section>
+                )}
 
                 <section className={`${CARD} flex flex-col items-center gap-6 text-center sm:flex-row sm:text-left`}>
                     <div className="relative shrink-0">
@@ -113,23 +143,7 @@ export default function User () {
                     </dl>
                 </section>
 
-                {profileAT && (
-                    <section className={CARD}>
-                        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-                            <h2 className="text-xl font-bold text-text">Perfil profesional</h2>
-                            {/* El perfil público se busca por el id del perfil de AT, no por el id del usuario */}
-                            <Link to={`/profileAT/at/${profileAT.id}`} className="text-sm font-semibold text-primary hover:underline">
-                                Ver mi perfil público
-                            </Link>
-                        </div>
-                        <dl className="grid gap-5 sm:grid-cols-2">
-                            {/* formatDate toma el día tal como está guardado: con formatDateDetail la zona horaria lo correría un día */}
-                            <InfoRow label="Fecha de nacimiento">{profileAT.dateOfBirth && formatDate (profileAT.dateOfBirth, { day: "numeric", month: "long", year: "numeric" })}</InfoRow>
-                            <InfoRow label="Género">{profileAT.genre}</InfoRow>
-                            <InfoRow label="Estudios">{profileAT.studies}</InfoRow>
-                        </dl>
-                    </section>
-                )}
+                {profileAT && <ProfessionalProfileSection profileAT={profileAT}/>}
             </div>
         </main>
     );
