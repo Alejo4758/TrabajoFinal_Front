@@ -12,7 +12,7 @@ const blank = (base) => ({
 });
 
 // Forma esperada de cada paciente. Las fechas van como "YYYY-MM-DD".
-// Los nombres de los objetivos de plan.specificGoals, objectives[].title y sessions[].goals deben coincidir.
+// Cada objetivo específico del plan es { id, text }. sessions[].goalIds guarda el id de los objetivos trabajados en el encuentro.
 const PATIENTS = {
   1: {
     id: 1, name: 'Juan Pérez', age: 12, status: 'Activo', startDate: '2026-03-02', lastActivity: 'Hoy',
@@ -34,7 +34,7 @@ const PATIENTS = {
       areas: ["Educativa", "Habilidades sociales"],
       stages: [{
         id: "s1", name: "Ámbito escolar", setting: "school", period: "", frequency: "",
-        specificGoals: ["Mejorar la comunicación con pares"],
+        specificGoals: [{ id: "g1", text: "Mejorar la comunicación con pares durante los recreos" }, { id: "g2", text: "Sostener la atención en las consignas por 15 minutos" }, { id: "g3", text: "Anticipar y regular los cambios de rutina" }],
         activities: ["Juegos de roles con pares"],
         strategies: ["Anticipación con apoyos visuales"],
       }],
@@ -43,10 +43,10 @@ const PATIENTS = {
       atRole: "",
     },
     sessions: [
-      { id: 41, date: '2026-10-28', duration: 90, goals: ['Mejorar la comunicación con pares durante los recreos'], activities: ['Juegos de roles con pares', 'Juego de mesa grupal'], observations: 'Inició una conversación con dos compañeros sin mediación. Se mostró entusiasmado con el juego de mesa.' },
-      { id: 40, date: '2026-10-21', duration: 90, goals: ['Anticipar y regular los cambios de rutina'], activities: ['Agenda visual de la jornada'], observations: 'Hubo un cambio de aula imprevisto. Usó la agenda visual para anticiparse y se reguló en pocos minutos.' },
-      { id: 39, date: '2026-10-14', duration: 60, goals: ['Sostener la atención en las consignas por 15 minutos'], activities: ['Pausas de regulación sensorial'], observations: 'Sostuvo la atención unos 12 minutos. Las pausas cortas ayudaron a continuar la tarea.' },
-      { id: 38, date: '2026-10-07', duration: 90, goals: ['Mejorar la comunicación con pares durante los recreos', 'Anticipar y regular los cambios de rutina'], activities: ['Juegos de roles con pares'], observations: 'Primer recreo compartido con otro grupo. Necesitó apoyo inicial y luego participó.' },
+      { id: 41, date: '2026-10-28', duration: 90, goalIds: ['g1'], activities: ['Juegos de roles con pares', 'Juego de mesa grupal'], observations: 'Inició una conversación con dos compañeros sin mediación. Se mostró entusiasmado con el juego de mesa.' },
+      { id: 40, date: '2026-10-21', duration: 90, goalIds: ['g3'], activities: ['Agenda visual de la jornada'], observations: 'Hubo un cambio de aula imprevisto. Usó la agenda visual para anticiparse y se reguló en pocos minutos.' },
+      { id: 39, date: '2026-10-14', duration: 60, goalIds: ['g2'], activities: ['Pausas de regulación sensorial'], observations: 'Sostuvo la atención unos 12 minutos. Las pausas cortas ayudaron a continuar la tarea.' },
+      { id: 38, date: '2026-10-07', duration: 90, goalIds: ['g1', 'g3'], activities: ['Juegos de roles con pares'], observations: 'Primer recreo compartido con otro grupo. Necesitó apoyo inicial y luego participó.' },
     ],
     objectives: [
       { id: 1, title: 'Mejorar la comunicación con pares durante los recreos', note: 'Inicia conversaciones breves sin mediación.', history: [{ date: '2026-08-15', value: 20 }, { date: '2026-09-15', value: 35 }, { date: '2026-10-07', value: 50 }, { date: '2026-10-28', value: 65 }] },
@@ -81,7 +81,7 @@ const PATIENTS = {
       areas: ["Educativa", "Habilidades sociales"],
       stages: [{
         id: "s1", name: "Ámbito escolar", setting: "school", period: "", frequency: "",
-        specificGoals: ["Mejorar la comunicación con pares"],
+        specificGoals: [{ id: "g1", text: "Planificar la semana con una agenda propia" }],
         activities: ["Juegos de roles con pares"],
         strategies: ["Anticipación con apoyos visuales"],
       }],
@@ -89,7 +89,7 @@ const PATIENTS = {
       evaluation: { criteria: ["Participación"], reportsFrequency: "monthly", notes: "" },
       atRole: "",
     },
-    sessions: [{ id: 51, date: '2026-10-29', duration: 60, goals: ['Planificar la semana con una agenda propia'], activities: ['Armado semanal de agenda'], observations: 'Completó la agenda de la semana con poca ayuda.' }],
+    sessions: [{ id: 51, date: '2026-10-29', duration: 60, goalIds: ['g1'], activities: ['Armado semanal de agenda'], observations: 'Completó la agenda de la semana con poca ayuda.' }],
     objectives: [{ id: 1, title: 'Planificar la semana con una agenda propia', note: 'Completa la agenda con poca ayuda.', history: [{ date: '2026-07-15', value: 15 }, { date: '2026-09-15', value: 40 }, { date: '2026-10-29', value: 60 }] }],
     supportNetwork: [{ id: 1, group: 'family', name: 'Ana González', role: 'Hermana', phone: '299 555-0190', email: 'ana.gonzalez@correo.com', status: 'Activo', notes: '' }],
     reports: [{ id: 1, title: 'Informe mensual de septiembre', period: 'Septiembre 2026', status: 'Finalizado', createdAt: '2026-10-03' }],

@@ -77,7 +77,7 @@ export function PlanDocumentContent({ plan, patient, authorName }) {
       subtitle: details,
       body: (
         <>
-          <Bullets title="Objetivos específicos" items={stage.specificGoals} />
+          <Bullets title="Objetivos específicos" items={stage.specificGoals.map((goal) => goal.text)} />
           <Bullets title="Actividades propuestas" items={stage.activities} />
           <Bullets title="Estrategias" items={stage.strategies} />
         </>
