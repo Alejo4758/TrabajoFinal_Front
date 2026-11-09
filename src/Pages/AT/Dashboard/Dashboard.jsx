@@ -64,6 +64,8 @@ export default function Dashboard () {
   const [loading, setLoading] = useState (true);
   const [error, setError] = useState ("");
   const [search, setSearch] = useState ("");
+  // false = se muestran solo los primeros MAX_PATIENTS_SHOWN pacientes
+  const [showAll, setShowAll] = useState (false);
   // Cambiarlo vuelve a pedir los datos (botón "Reintentar")
   const [reloadKey, setReloadKey] = useState (0);
 
@@ -106,7 +108,7 @@ export default function Dashboard () {
     };
   }, [data]);
 
-  const shownPatients = filteredPatients.slice (0, MAX_PATIENTS_SHOWN);
+  const shownPatients = showAll ? filteredPatients : filteredPatients.slice (0, MAX_PATIENTS_SHOWN);
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 p-5 sm:p-8">
@@ -201,9 +203,9 @@ export default function Dashboard () {
                 </p>
               )}
               {filteredPatients.length > MAX_PATIENTS_SHOWN && (
-                <Link to="/at/pacientes" className="block border-t border-border p-4 text-center text-sm font-medium text-primary hover:bg-surface-alt">
-                  Ver los {filteredPatients.length} pacientes
-                </Link>
+                <button type="button" onClick={() => setShowAll (value => !value)} aria-expanded={showAll} className="block w-full cursor-pointer border-t border-border p-4 text-center text-sm font-medium text-primary hover:bg-surface-alt focus:bg-surface-alt focus:outline-none">
+                  {showAll ? "Ver menos" : `Ver los ${filteredPatients.length} pacientes`}
+                </button>
               )}
             </div>
           </section>
