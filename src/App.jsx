@@ -19,6 +19,7 @@ import Unauthorized from './Pages/Unauthorized/Unauthorized';
 import NotFound from './Pages/404/404';
 import { ROLES } from './utils/constants';
 import PatientDetail from "./Pages/AT/PatientDetail/PatientDetail";
+import Patients from "./Pages/Patients/Patients";
 
 export default function App () {
   return (
@@ -47,6 +48,11 @@ export default function App () {
               {/* Agenda: cada rol ve su propia vista */}
               <Route element={<ProtectedRoute allowedRoles={[ROLES.AT, ROLES.CLIENT, ROLES.ADMIN]}/>}>
                 <Route path='/calendario' element={<Calendar/>}/>
+              </Route>
+
+              {/* Solo CLIENT: las personas a su cargo que reciben el acompañamiento */}
+              <Route element={<ProtectedRoute allowedRoles={[ROLES.CLIENT]}/>}>
+                <Route path='/pacientes' element={<Patients/>}/>
               </Route>
 
               {/* Solo AT */}

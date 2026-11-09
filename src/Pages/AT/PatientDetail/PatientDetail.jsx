@@ -2,6 +2,7 @@ import { useParams, useSearchParams } from "react-router";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { getPatient } from "../../../services/patientService";
+import { useAuth } from "../../../hooks/useAuth";
 import { initials, formatDate } from "../../../utils/utils";
 import Pill from "../../../components/AT/Pill/Pill";
 import Summary from "./Tabs/Summary";
@@ -31,8 +32,10 @@ function HubSkeleton () {
 }
 
 export default function PatientDetail () {
+    // id es el id del paciente (no el del usuario titular de su cuenta)
     const { id } = useParams ();
-    
+    const { token } = useAuth ();
+
     const [searchParams] = useSearchParams ();
 
     const [patient, setPatient] = useState (null);
@@ -43,7 +46,7 @@ export default function PatientDetail () {
         setLoading (true);
         setError ("");
         try {
-            setPatient (await getPatient (id));
+            setPatient (await getPatient (id, token));
         }
         catch (e) {
             setPatient (null);
@@ -107,7 +110,7 @@ export default function PatientDetail () {
                                         {patient.name}
                                     </h2>
                                     <p className="mt-1 text-sm text-text-muted">
-                                        {patient.age} años · Última actividad: {patient.lastActivity}
+                                        {patient.age != null && `${patient.age} años · `}Última actividad: {patient.lastActivity}
                                     </p>
                                     <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
                                         <Pill tone={patient.status === "Activo" ? "success" : "neutral"}>
@@ -136,7 +139,8 @@ export default function PatientDetail () {
                         </ul>
                     </nav>
                     <section>
-                        <ActiveComponent patient={patient}/>
+                        {/* onPlanSaved deja el plan recién guardado en el paciente: así sigue ahí al cambiar de pestaña y volver */}
+                        <ActiveComponent patient={patient} onPlanSaved={plan => setPatient (previous => ({ ...previous, plan }))}/>
                     </section>
                 </>
             )}

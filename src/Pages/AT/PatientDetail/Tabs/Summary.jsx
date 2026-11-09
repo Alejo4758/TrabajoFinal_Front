@@ -15,9 +15,26 @@ export default function SummaryTab ({ patient }) {
   return (
     <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
+            <CardPatientDetail title={"Datos del paciente"} subtitle={"Información cargada por la familia"}>
+                <dl className="grid gap-5 sm:grid-cols-3">
+                    <InfoRow label="Edad">
+                        {patient.age != null && `${patient.age} años`}
+                    </InfoRow>
+                    <div className="sm:col-span-2">
+                        <InfoRow label="Diagnóstico">
+                            {patient.diagnosis}
+                        </InfoRow>
+                    </div>
+                </dl>
+                {patient.notes && (
+                    <p className="mt-5 whitespace-pre-line break-words rounded-lg border border-border bg-background p-4 text-sm leading-relaxed text-text-secondary">
+                        {patient.notes}
+                    </p>
+                )}
+            </CardPatientDetail>
             <CardPatientDetail title={"Sobre el acompañamiento"} subtitle={"Información de la solicitud de vinculación"}>
-                <p className="rounded-lg border border-border bg-background p-4 text-sm leading-relaxed text-text-secondary">
-                    {patient.case.description}
+                <p className="whitespace-pre-line break-words rounded-lg border border-border bg-background p-4 text-sm leading-relaxed text-text-secondary">
+                    {patient.case.description || "La solicitud no tiene una descripción del caso"}
                 </p>
                 <dl className="mt-5 grid gap-5 sm:grid-cols-3">
                     <InfoRow label="Zona de trabajo">
@@ -31,25 +48,23 @@ export default function SummaryTab ({ patient }) {
                     </InfoRow>
                 </dl>
             </CardPatientDetail>
+            {/* El responsable es el titular de la cuenta que cargó al paciente. Si el paciente es el propio titular, no hay uno aparte */}
             <CardPatientDetail title={"Responsable"} subtitle={"Persona de contacto del acompañamiento"}>
                 {patient.guardian ? (
-                    <dl className="grid gap-5 sm:grid-cols-2">
+                    <dl className="grid gap-5 sm:grid-cols-3">
                         <InfoRow label={"Nombre"}>
                             {patient.guardian.name}
                         </InfoRow>
-                        <InfoRow label={"Vínculo"}>
+                        <InfoRow label={"Vínculo con el paciente"}>
                             {patient.guardian.relationship}
                         </InfoRow>
-                        <InfoRow label={"Teléfono"}>
-                            {patient.guardian.phone}
-                        </InfoRow>
                         <InfoRow label={"Correo electrónico"}>
-                            {patient.guardian.email}
+                            {patient.guardian.email && <span className="break-all">{patient.guardian.email}</span>}
                         </InfoRow>
                     </dl>
                 ) : (
-                    <p className="text-sm text-muted">
-                        Todavía no hay un responsable registrado
+                    <p className="text-sm text-text-muted">
+                        El paciente gestiona su propia cuenta: podés escribirle por el chat
                     </p>
                 )}
             </CardPatientDetail>

@@ -100,6 +100,22 @@ export const initials = name => name.split (" ").slice (0, 2).map (word => word[
 // Con el nombre completo, initials tomaría las dos primeras palabras ("Ana María Paz" daría AM en vez de AP)
 export const shortName = person => [person?.name?.trim ().split (" ")[0], person?.lastName].filter (Boolean).join (" ");
 
+// Nombre completo de una persona ({ name, lastName }): usuario, paciente o acompañante
+export const fullName = person => [person?.name, person?.lastName].filter (Boolean).join (" ");
+
+// Edad en años a partir de una fecha "YYYY-MM-DD" (o ISO). Toma el día tal como está guardado, sin correrlo por la zona horaria.
+// Devuelve null si no hay fecha: los pacientes creados al migrar datos anteriores no la tienen
+export const ageFromDate = value => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec (value || "");
+  if (!m) return null;
+  const today = new Date ();
+  const month = Number (m[2]) - 1;
+  const day = Number (m[3]);
+  let age = today.getFullYear () - Number (m[1]);
+  if (today.getMonth () < month || (today.getMonth () === month && today.getDate () < day)) age--;
+  return age >= 0 ? age : null;
+};
+
 export function formatDate(iso, options = { day: 'numeric', month: 'short', year: 'numeric' }) {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
   if (!m) return '—';

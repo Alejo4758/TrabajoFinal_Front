@@ -63,6 +63,7 @@ export const ROLE_ROUTES = {
 // icon es el nombre del ícono en ICONS que muestra la barra de navegación (Navbar)
 export const NAV_LINKS = [
   { to: "/searchAT", label: "Buscar acompañantes", icon: "search", roles: [ROLES.CLIENT] },
+  { to: "/pacientes", label: "Personas acompañadas", icon: "users", roles: [ROLES.CLIENT] },
   { to: "/dashboardAT", label: "Mi panel", icon: "home", roles: [ROLES.AT] },
   { to: "/linkRequests", label: "Solicitudes", icon: "users", roles: [ROLES.AT] },
   { to: "/panelAdmin", label: "Administración", icon: "shield", roles: [ROLES.ADMIN] },
@@ -84,6 +85,33 @@ export const ROLE_LABELS = {
   AT: "Acompañante terapéutico",
   ADMIN: "Administrador"
 };
+
+// Vínculo del titular de la cuenta con la persona acompañada (enum PatientRelationship del backend): "soy su ..."
+// SELF es el caso en que la cuenta es de la propia persona que recibe el acompañamiento
+export const RELATIONSHIP_LABELS = {
+  SELF: "Soy yo",
+  PARENT: "Madre / Padre",
+  CHILD: "Hijo / Hija",
+  SIBLING: "Hermano / Hermana",
+  GRANDPARENT: "Abuelo / Abuela",
+  PARTNER: "Pareja",
+  LEGAL_GUARDIAN: "Tutor / Tutora legal",
+  OTHER: "Otro vínculo"
+};
+
+// Estado de un acompañamiento (enum TreatmentStatus del backend)
+export const TREATMENT_STATUS_LABELS = {
+  ACTIVE: "Activo",
+  PAUSED: "En pausa",
+  FINISHED: "Finalizado"
+};
+
+// Datos de una persona acompañada: los mismos máximos que valida el backend
+export const PATIENT_NAME_MAX = 60;
+
+export const PATIENT_DIAGNOSIS_MAX = 200;
+
+export const PATIENT_NOTES_MAX = 1000;
 
 // Foto de perfil: los mismos formatos y tamaño máximo que valida el backend, para avisar antes de subir el archivo
 export const AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];

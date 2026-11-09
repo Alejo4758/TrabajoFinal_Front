@@ -1,126 +1,138 @@
-// Servicio de la pantalla del paciente (vista del AT).
-// IMPORTANTE: por ahora SIMULA el backend con datos de prueba. Reemplazá la función por la llamada real (ver TODO).
+// Servicio de pacientes (las personas que reciben el acompañamiento). Tiene dos partes:
+//  - Titular de la cuenta (rol CLIENT): las personas a su cargo. Devuelven { status, data, error }, igual que modalRequestService
+//  - Acompañante (rol AT): el detalle de un paciente que acompaña. getPatient lanza un Error con el mensaje para mostrar, igual que getATDashboard
+// El titular y el acompañante salen siempre del token: nunca se manda un id de usuario
 
-const API_URL = import.meta.env?.VITE_API_URL ?? 'http://localhost:3000/api';
-const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const clone = (value) => JSON.parse(JSON.stringify(value));
+import { RELATIONSHIP_LABELS, TREATMENT_STATUS_LABELS } from "../utils/constants";
+import { ageFromDate, formatRelativeTime, fullName } from "../utils/utils";
 
-// Paciente sin información cargada todavía (recién vinculado)
-const blank = (base) => ({
-  nextMeeting: null, guardian: null, plan: null, sessions: [], objectives: [], supportNetwork: [], reports: [], ...base,
-});
+const BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace (/\/+$/, "");
 
-// Forma esperada de cada paciente. Las fechas van como "YYYY-MM-DD".
-// Cada objetivo específico del plan es { id, text }. sessions[].goalIds guarda el id de los objetivos trabajados en el encuentro.
-const PATIENTS = {
-  1: {
-    id: 1, name: 'Juan Pérez', age: 12, status: 'Activo', startDate: '2026-03-02', lastActivity: 'Hoy',
-    nextMeeting: { date: '2026-11-02', time: '10:00', type: 'Encuentro presencial' },
-    case: {
-      description: 'Acompañamiento escolar para un niño con TEA: adaptación de contenidos y mediación vincular con pares.',
-      locality: 'Neuquén', socialProgram: 'OSEP',
-    },
-    guardian: { name: 'Laura Pérez', relationship: 'Madre', phone: '299 555-0142', email: 'laura.perez@correo.com' },
-    plan: {
-      id: 1, status: "active",
-      validFrom: "2026-03-02",
-      validUntil: "2026-12-15",
-      diagnosis: "",
-      settings: ["school"],
-      weeklyHours: "",
-      rationale: "Texto de la fundamentación...",
-      generalGoals: ["Favorecer la autonomía y la integración escolar."],
-      areas: ["Educativa", "Habilidades sociales"],
-      stages: [{
-        id: "s1", name: "Ámbito escolar", setting: "school", period: "", frequency: "",
-        specificGoals: [{ id: "g1", text: "Mejorar la comunicación con pares durante los recreos" }, { id: "g2", text: "Sostener la atención en las consignas por 15 minutos" }, { id: "g3", text: "Anticipar y regular los cambios de rutina" }],
-        activities: ["Juegos de roles con pares"],
-        strategies: ["Anticipación con apoyos visuales"],
-      }],
-      familyTeam: [],
-      evaluation: { criteria: ["Participación"], reportsFrequency: "monthly", notes: "" },
-      atRole: "",
-    },
-    sessions: [
-      { id: 41, date: '2026-10-28', duration: 90, goalIds: ['g1'], activities: ['Juegos de roles con pares', 'Juego de mesa grupal'], observations: 'Inició una conversación con dos compañeros sin mediación. Se mostró entusiasmado con el juego de mesa.' },
-      { id: 40, date: '2026-10-21', duration: 90, goalIds: ['g3'], activities: ['Agenda visual de la jornada'], observations: 'Hubo un cambio de aula imprevisto. Usó la agenda visual para anticiparse y se reguló en pocos minutos.' },
-      { id: 39, date: '2026-10-14', duration: 60, goalIds: ['g2'], activities: ['Pausas de regulación sensorial'], observations: 'Sostuvo la atención unos 12 minutos. Las pausas cortas ayudaron a continuar la tarea.' },
-      { id: 38, date: '2026-10-07', duration: 90, goalIds: ['g1', 'g3'], activities: ['Juegos de roles con pares'], observations: 'Primer recreo compartido con otro grupo. Necesitó apoyo inicial y luego participó.' },
-    ],
-    objectives: [
-      { id: 1, title: 'Mejorar la comunicación con pares durante los recreos', note: 'Inicia conversaciones breves sin mediación.', history: [{ date: '2026-08-15', value: 20 }, { date: '2026-09-15', value: 35 }, { date: '2026-10-07', value: 50 }, { date: '2026-10-28', value: 65 }] },
-      { id: 2, title: 'Sostener la atención en las consignas por 15 minutos', note: 'Sostiene unos 12 minutos con pausas cortas.', history: [{ date: '2026-08-15', value: 30 }, { date: '2026-09-15', value: 40 }, { date: '2026-10-14', value: 55 }] },
-      { id: 3, title: 'Anticipar y regular los cambios de rutina', note: 'Usa la agenda visual de forma autónoma.', history: [{ date: '2026-08-15', value: 25 }, { date: '2026-09-15', value: 50 }, { date: '2026-10-07', value: 70 }, { date: '2026-10-21', value: 80 }] },
-    ],
-    supportNetwork: [
-      { id: 1, group: 'family', name: 'Laura Pérez', role: 'Madre', phone: '299 555-0142', email: 'laura.perez@correo.com', status: 'Activo', notes: 'Responsable del acompañamiento. Prefiere comunicarse por mensajes.' },
-      { id: 2, group: 'family', name: 'Roberto Pérez', role: 'Padre', phone: '', email: 'roberto.perez@correo.com', status: 'Invitación pendiente', notes: '' },
-      { id: 3, group: 'professional', name: 'Marta Giménez', role: 'Docente de grado', phone: '', email: 'marta.gimenez@escuela.edu.ar', status: 'Activo', notes: 'Coordina las adaptaciones de contenidos en el aula.' },
-      { id: 4, group: 'professional', name: 'Dra. Carolina Ibáñez', role: 'Psicopedagoga', phone: '299 555-0177', email: 'c.ibanez@consultorio.com', status: 'Activo', notes: 'Sesiones los jueves.' },
-    ],
-    reports: [
-      { id: 1, title: 'Informe mensual de septiembre', period: 'Septiembre 2026', status: 'Finalizado', createdAt: '2026-10-02' },
-      { id: 2, title: 'Informe mensual de octubre', period: 'Octubre 2026', status: 'Borrador', createdAt: '2026-10-29' },
-    ],
-  },
-  2: blank({
-    id: 2, name: 'María González', age: 24, status: 'Activo', startDate: '2026-06-10', lastActivity: 'Ayer',
-    nextMeeting: { date: '2026-11-02', time: '16:30', type: 'Encuentro presencial' },
-    case: { description: 'Acompañamiento en actividades de la vida diaria y organización de rutinas durante un proceso de rehabilitación.', locality: 'Neuquén', socialProgram: 'Incluir Salud' },
-    guardian: { name: 'Ana González', relationship: 'Hermana', phone: '299 555-0190', email: 'ana.gonzalez@correo.com' },
-    plan: {
-      id: 2, status: "active",
-      validFrom: "2026-03-02",
-      validUntil: "2026-12-15",
-      diagnosis: "",
-      settings: ["school"],
-      weeklyHours: "",
-      rationale: "Texto de la fundamentación...",
-      generalGoals: ["Favorecer la autonomía y la integración escolar."],
-      areas: ["Educativa", "Habilidades sociales"],
-      stages: [{
-        id: "s1", name: "Ámbito escolar", setting: "school", period: "", frequency: "",
-        specificGoals: [{ id: "g1", text: "Planificar la semana con una agenda propia" }],
-        activities: ["Juegos de roles con pares"],
-        strategies: ["Anticipación con apoyos visuales"],
-      }],
-      familyTeam: [],
-      evaluation: { criteria: ["Participación"], reportsFrequency: "monthly", notes: "" },
-      atRole: "",
-    },
-    sessions: [{ id: 51, date: '2026-10-29', duration: 60, goalIds: ['g1'], activities: ['Armado semanal de agenda'], observations: 'Completó la agenda de la semana con poca ayuda.' }],
-    objectives: [{ id: 1, title: 'Planificar la semana con una agenda propia', note: 'Completa la agenda con poca ayuda.', history: [{ date: '2026-07-15', value: 15 }, { date: '2026-09-15', value: 40 }, { date: '2026-10-29', value: 60 }] }],
-    supportNetwork: [{ id: 1, group: 'family', name: 'Ana González', role: 'Hermana', phone: '299 555-0190', email: 'ana.gonzalez@correo.com', status: 'Activo', notes: '' }],
-    reports: [{ id: 1, title: 'Informe mensual de septiembre', period: 'Septiembre 2026', status: 'Finalizado', createdAt: '2026-10-03' }],
-  }),
-  3: blank({
-    id: 3, name: 'Tomás Rodríguez', age: 9, status: 'Activo', startDate: '2026-10-26', lastActivity: '28/10',
-    case: { description: 'Acompañamiento en el horario escolar para favorecer la participación en actividades grupales.', locality: 'Cipolletti', socialProgram: 'PAMI' },
-    guardian: { name: 'Diego Rodríguez', relationship: 'Padre', phone: '299 555-0121', email: 'diego.rodriguez@correo.com' },
-  }),
-  4: blank({
-    id: 4, name: 'Sofía Álvarez', age: 15, status: 'Activo', startDate: '2026-09-01', lastActivity: '25/10',
-    nextMeeting: { date: '2026-11-03', time: '09:00', type: 'Encuentro presencial' },
-    case: { description: 'Acompañamiento para sostener la asistencia y la organización del estudio.', locality: 'Neuquén', socialProgram: 'OSEP' },
-  }),
-  5: blank({
-    id: 5, name: 'Lucas Benítez', age: 31, status: 'En pausa', startDate: '2026-02-12', lastActivity: '12/10',
-    case: { description: 'Acompañamiento domiciliario. El proceso está en pausa por pedido del paciente.', locality: 'Plottier', socialProgram: 'Ninguna (particular)' },
-  }),
-  6: blank({
-    id: 6, name: 'Valentina Ríos', age: 7, status: 'Activo', startDate: '2026-10-05', lastActivity: '10/10',
-    case: { description: 'Acompañamiento en la adaptación al nivel primario.', locality: 'Neuquén', socialProgram: 'OSEP' },
-  }),
+const ACTIVITY_TYPES = {
+  SESSION: "Sesión",
+  INTERVIEW: "Entrevista",
+  MEETING: "Reunión",
+  OTHER: "Recordatorio",
 };
 
-export async function getPatient(id) {
-  // TODO (backend): GET `${API_URL}/at/patients/${id}` con { headers: authHeaders() }.
-  // El backend debe verificar que el paciente pertenezca al AT autenticado. Si el volumen crece,
-  // conviene dividir la respuesta por pestaña (plan, sesiones, evolución, red, informes) y pedirla al abrirla.
-  void API_URL; void authHeaders;
-  await wait(600);
-  const patient = PATIENTS[Number(id)];
-  if (!patient) throw new Error('No encontramos al paciente.');
-  return clone(patient);
-}
+// Hace el pedido autenticado y normaliza la respuesta a { status, data, error }
+const request = async (path, token, options = {}) => {
+  if (!token) return { status: 401, data: null, error: "Tenés que iniciar sesión para continuar" };
+
+  try {
+    const response = await fetch (`${BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const contentType = response.headers.get ("content-type") || "";
+
+    const responseBody = contentType.includes ("application/json") ? await response.json () : null;
+
+    if (response.ok) return { status: response.status, data: responseBody?.data ?? responseBody, error: null };
+
+    return { status: response.status, data: null, error: responseBody?.message || responseBody?.error || `Error de backend: ${response.status}` };
+  }
+  catch {
+    return { status: null, data: null, error: "Error de conexión con el backend. Intentá nuevamente" };
+  }
+};
+
+// Solo se mandan los campos del formulario, ya recortados. Los opcionales vacíos van como null para que el backend los borre
+const toPayload = patient => ({
+  name: patient.name.trim (),
+  lastName: patient.lastName.trim (),
+  dateOfBirth: patient.dateOfBirth,
+  relationship: patient.relationship,
+  diagnosis: patient.diagnosis?.trim () || null,
+  notes: patient.notes?.trim () || null,
+});
+
+// ---------- Titular de la cuenta ----------
+
+// Personas a cargo del usuario logueado. Cada una trae sus acompañamientos (treatments) con el nombre del profesional
+export const getMyPatients = async token => request ("/api/patients", token);
+
+// patient = { name, lastName, dateOfBirth: "YYYY-MM-DD", relationship, diagnosis, notes }
+export const createPatient = async (patient, token) =>
+  request ("/api/patients", token, { method: "POST", body: JSON.stringify (toPayload (patient)) });
+
+export const updatePatient = async (patientId, patient, token) =>
+  request (`/api/patients/${encodeURIComponent (patientId)}`, token, { method: "PATCH", body: JSON.stringify (toPayload (patient)) });
+
+// ---------- Acompañante ----------
+
+const pad = n => String (n).padStart (2, "0");
+
+const parseDate = value => {
+  const date = value ? new Date (value) : null;
+  return date && !Number.isNaN (date.getTime ()) ? date : null;
+};
+
+// Día y hora locales de una fecha, con la forma que usan las pestañas del paciente
+const localDay = date => `${date.getFullYear ()}-${pad (date.getMonth () + 1)}-${pad (date.getDate ())}`;
+
+const localTime = date => `${pad (date.getHours ())}:${pad (date.getMinutes ())}`;
+
+// Convierte la respuesta del backend a la forma que muestran PatientDetail y sus pestañas
+const toPatientDetail = data => {
+  const startDate = parseDate (data?.treatment?.startDate);
+  const lastActivity = parseDate (data?.lastActivity);
+  const nextMeeting = parseDate (data?.nextMeeting?.startDate);
+  const coverage = [...(data?.case?.socialPrograms ?? []), ...(data?.case?.otherCoverage ? ["Otra o ninguna"] : [])];
+
+  return {
+    id: data.id,
+    name: fullName (data),
+    age: ageFromDate (data.dateOfBirth),
+    diagnosis: data.diagnosis ?? "",
+    notes: data.notes ?? "",
+    status: TREATMENT_STATUS_LABELS[data?.treatment?.status] ?? "Activo",
+    startDate: startDate ? localDay (startDate) : "",
+    lastActivity: lastActivity ? formatRelativeTime (lastActivity) : "Sin actividad",
+    nextMeeting: nextMeeting ? { date: localDay (nextMeeting), time: localTime (nextMeeting), type: ACTIVITY_TYPES[data.nextMeeting.type] ?? "Encuentro" } : null,
+    // Lo que la familia contó en la solicitud de vinculación que dio origen al acompañamiento
+    case: {
+      description: data?.case?.description ?? "",
+      locality: data?.case?.locality ?? "",
+      socialProgram: coverage.join (", "),
+    },
+    // El responsable es el titular de la cuenta. Si el paciente es el propio titular, no hay un responsable aparte
+    guardian: data.relationship === "SELF" || !data.tutor ? null : {
+      name: fullName (data.tutor),
+      relationship: RELATIONSHIP_LABELS[data.relationship] ?? "",
+      email: data.tutor.email ?? "",
+    },
+    plan: data.plan ?? null,
+    // Encuentros, evolución, red de apoyo e informes todavía no tienen backend: van vacíos hasta que existan
+    sessions: [],
+    objectives: [],
+    supportNetwork: [],
+    reports: [],
+  };
+};
+
+// Detalle de un paciente del AT logueado. El backend responde 404 si no tiene un acompañamiento con ese paciente
+export const getPatient = async (patientId, token) => {
+  if (!token) throw new Error ("Tenés que iniciar sesión para ver al paciente");
+
+  let response;
+  try {
+    response = await fetch (`${BASE_URL}/api/at/patients/${encodeURIComponent (patientId)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }
+  catch {
+    throw new Error ("Error de conexión con el backend. Intentá nuevamente");
+  }
+
+  const contentType = response.headers.get ("content-type") || "";
+  const responseBody = contentType.includes ("application/json") ? await response.json () : null;
+
+  if (!response.ok) throw new Error (responseBody?.message || responseBody?.error || `Error de backend: ${response.status}`);
+
+  return toPatientDetail (responseBody?.data ?? responseBody);
+};
