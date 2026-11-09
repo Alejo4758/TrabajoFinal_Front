@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router';
 import { getATById } from '../../services/itemsService';
 import { useAuth } from '../../hooks/useAuth';
-import { calculateAge, formatMonthYear, formatAvailability } from '../../utils/utils';
+import { calculateAge, formatMonthYear } from '../../utils/utils';
+import AvailabilitySummary from '../../components/AvailabilitySummary/AvailabilitySummary';
+import Avatar from '../../components/Avatar/Avatar';
 import ModalEngagement from '../../components/ModalEngagement/ModalEngagement';
 import InterviewRequestModal from '../../components/InterviewRequestModal/InterviewRequestModal';
 import LoadingScreen from '../../components/LoadingScreen/LoadingScreen';
@@ -83,8 +85,6 @@ export default function ATProfile () {
     // Solo los clientes (o visitantes, que pasan por el login) piden entrevistas
     const canRequestInterview = !isAuthenticated || user?.role === "CLIENT";
 
-    const profileImage = at.image || "https://avatars.githubusercontent.com/u/217831763?s=400&v=4";
-
     return (
         <main className="min-h-page bg-background px-4 py-8 sm:px-6 lg:px-8 font-sans">
             <div className="mx-auto max-w-6xl">
@@ -94,7 +94,8 @@ export default function ATProfile () {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     <section className="lg:col-span-4">
                         <div className="sticky top-[calc(var(--spacing-navbar)+2rem)] rounded-3xl border border-border bg-surface p-6 shadow-sm flex flex-col items-center text-center">
-                            <img className="w-36 h-36 rounded-full border-4 border-primary/10 object-cover mb-4" src={profileImage} alt={`Foto de ${at.name}`}/>
+                            {/* La foto que el A.T. subió en "Mi perfil"; si no subió ninguna, sus iniciales. El nombre está justo abajo */}
+                            <Avatar image={at.profilePicture} name={`${at.name} ${at.lastName}`} className="mb-4 size-36 border-4 border-primary/10 text-4xl"/>
                             <h2 className="text-2xl font-bold text-text">
                                 {at.name} {at.lastName}
                             </h2>
@@ -134,9 +135,9 @@ export default function ATProfile () {
                                     <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-2 mt-4">
                                         Disponibilidad
                                     </h3>
-                                    <p className="text-sm text-text bg-background border border-border rounded-md px-3 py-2">
-                                        {formatAvailability (at.availability) || "A convenir"}
-                                    </p>
+                                    <div className="rounded-md border border-border bg-background px-3 py-3">
+                                        <AvailabilitySummary availability={at.availability}/>
+                                    </div>
                                 </div>
                             </div>
                         </div>

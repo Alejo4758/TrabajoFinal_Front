@@ -1,11 +1,21 @@
 
 import { useCallback, useEffect, useState } from "react";
-import { getPendingATProfiles, reviewATProfile } from "../../services/adminService";
+import { getCatalogSuggestions, getPendingATProfiles, reviewATProfile } from "../../services/adminService";
 import ValidationList from "../../components/ValidationList/ValidationList";
 import ValidationDetail from "../../components/ValidationDetail/ValidationDetail";
+import CatalogSuggestions from "../../components/CatalogSuggestions/CatalogSuggestions";
 import Icon from "../../components/Icon/Icon";
 
+// Pestañas del panel: la validación de acompañantes y las especialidades y obras sociales que sugirieron
+const TABS = [
+  { id: "validations", label: "Validación de acompañantes" },
+  { id: "suggestions", label: "Sugerencias de la lista" },
+];
+
 export default function PanelAdmin() {
+  const [tab, setTab] = useState("validations");
+  // Cuántas sugerencias esperan revisión (null mientras no se sabe): se muestra en la pestaña
+  const [pendingSuggestions, setPendingSuggestions] = useState(null);
   const [profiles, setProfiles] = useState([]);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -37,6 +47,19 @@ export default function PanelAdmin() {
   useEffect(() => {
     loadProfiles();
   }, [loadProfiles]);
+
+  // Para mostrar en la pestaña cuántas sugerencias esperan revisión, sin tener que abrirla
+  useEffect(() => {
+    let cancelled = false;
+
+    getCatalogSuggestions("PENDING").then((result) => {
+      if (!cancelled && !result.error) setPendingSuggestions(result.data.length);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleReview = async (profileId, status, observations) => {
     setReviewing(true);
@@ -92,10 +115,38 @@ export default function PanelAdmin() {
           </p>
 
           <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-text sm:text-4xl">
-            Validación de acompañantes
+            {TABS.find((item) => item.id === tab).label}
           </h2>
         </section>
 
+        <nav aria-label="Secciones del panel" className="-mx-4 mb-8 overflow-x-auto border-b border-border px-4 sm:mx-0 sm:px-0">
+          <ul className="flex min-w-max gap-1">
+            {TABS.map((item) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => setTab(item.id)}
+                  aria-current={tab === item.id ? "page" : undefined}
+                  className={`flex cursor-pointer items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                    tab === item.id ? "border-primary text-primary" : "border-transparent text-text-secondary hover:text-text"
+                  }`}
+                >
+                  {item.label}
+                  {item.id === "suggestions" && pendingSuggestions > 0 && (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                      {pendingSuggestions}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {tab === "suggestions" ? (
+          <CatalogSuggestions onPendingCount={setPendingSuggestions} />
+        ) : (
+        <>
         {/* Resumen */}
         <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* Solicitudes pendientes */}
@@ -219,6 +270,8 @@ export default function PanelAdmin() {
               setSuccessMessage("");
             }}
           />
+        )}
+        </>
         )}
       </div>
     </main>

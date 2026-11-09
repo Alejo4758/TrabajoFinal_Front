@@ -158,3 +158,93 @@ export async function reviewATProfile(
     };
   }
 }
+
+/**
+ * Obtiene las especialidades y obras sociales que sugirieron los acompañantes porque no estaban en la lista.
+ * status: "PENDING" (por defecto), "APPROVED" o "REJECTED".
+ * Cada una trae { id, type: "ESPECIALITY" | "OBRA_SOCIAL", name, status, reviewNote, createdAt, reviewedAt,
+ * at: { profileATId, name, lastName, email }, existing: { id, name } | null, sameNameCount }.
+ */
+export async function getCatalogSuggestions(status = "PENDING") {
+  try {
+    const result = await request(
+      `/admin/catalog-suggestions?status=${encodeURIComponent(status)}`
+    );
+
+    return {
+      data: extractProfiles(result),
+      error: null,
+    };
+  } catch (error) {
+    return {
+      data: [],
+      error: error.message || "No se pudieron cargar las sugerencias.",
+    };
+  }
+}
+
+/**
+ * Obtiene las especialidades y obras sociales registradas, con cuántos acompañantes eligió cada una,
+ * para buscar si lo que sugieren ya está con otro nombre.
+ * data = { ESPECIALITY: [{ id, name, ats }], OBRA_SOCIAL: [{ id, name, ats }] }.
+ */
+export async function getCatalogs() {
+  try {
+    const result = await request("/admin/catalogs");
+
+    return {
+      data: result?.data ?? result,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      data: null,
+      error: error.message || "No se pudieron cargar las listas.",
+    };
+  }
+}
+
+/**
+ * Aprueba o rechaza una sugerencia (y las pendientes con el mismo nombre).
+ * Al aprobar, name permite corregir cómo se agrega a la lista; existingId indica que ya estaba en la lista con otro
+ * nombre (se marca esa opción y no se agrega nada). Al rechazar, note es el motivo (obligatorio).
+ * data = { message, data: { resolved, option, created } }.
+ */
+export async function reviewCatalogSuggestion(
+  suggestionId,
+  { status, name = "", note = "", existingId = null }
+) {
+  try {
+    if (!["APPROVED", "REJECTED"].includes(status)) {
+      throw new Error("El estado de la revisión no es válido.");
+    }
+
+    if (status === "REJECTED" && !note.trim()) {
+      throw new Error("Indicá el motivo del rechazo.");
+    }
+
+    const result = await request(
+      `/admin/catalog-suggestions/${encodeURIComponent(suggestionId)}/review`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(
+          status === "REJECTED"
+            ? { status, note: note.trim() }
+            : existingId
+              ? { status, existingId }
+              : { status, name: name.trim() }
+        ),
+      }
+    );
+
+    return {
+      data: result,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      data: null,
+      error: error.message || "No se pudo registrar la revisión.",
+    };
+  }
+}

@@ -79,6 +79,23 @@ export const PROFILE_LINKS = [
   { label: "Ayuda", icon: "help", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] }
 ];
 
+// Con este parámetro, "Mi perfil" abre el formulario del perfil profesional del A.T. (?editar=profesional)
+export const PROFILE_EDIT_PARAM = { name: "editar", value: "profesional" };
+
+// A dónde lleva el aviso de perfil incompleto del A.T. (el badge sobre su foto en la barra de navegación):
+// "Mi perfil" con el formulario del perfil profesional ya abierto
+export const PROFILE_ROUTE = `/profile?${PROFILE_EDIT_PARAM.name}=${PROFILE_EDIT_PARAM.value}`;
+
+// Datos del perfil profesional que el registro no pide y que el A.T. tiene que completar después. Las claves son las que
+// devuelve el backend en user.missingProfileFields al iniciar sesión
+export const PROFILE_FIELD_LABELS = {
+  genre: "Género",
+  studies: "Estudios",
+  localities: "Zonas de trabajo",
+  experiences: "Experiencia laboral",
+  obrasSociales: "Obras sociales"
+};
+
 // Nombre de cada rol para mostrárselo al usuario
 export const ROLE_LABELS = {
   CLIENT: "Solicitante",

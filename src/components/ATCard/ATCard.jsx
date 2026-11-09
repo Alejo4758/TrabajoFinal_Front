@@ -1,14 +1,15 @@
 import { Link } from "react-router";
-import { calculateAge, formatAvailability } from "../../utils/utils";
+import { calculateAge } from "../../utils/utils";
+import AvailabilitySummary from "../AvailabilitySummary/AvailabilitySummary";
+import Avatar from "../Avatar/Avatar";
 
-export default function ATCard ({ id, name = "", lastName = "", dateOfBirth = "", localities = [], image = null, specialties = [], socialPrograms = [], availability = [] }) {    
-    
+export default function ATCard ({ id, name = "", lastName = "", dateOfBirth = "", localities = [], profilePicture = null, specialties = [], socialPrograms = [], availability = [] }) {
+
     return (
         <article className="flex h-full flex-col border border-border bg-surface rounded-2xl p-5">
             <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center overflow-hidden rounded-full border-2 border-primary/20 bg-primary/10 shrink-0 size-20">
-                    <img src={image} alt={`Perfil de ${name}`} className="h-full w-full object-cover"/>
-                </div>
+                {/* La foto que el A.T. subió en "Mi perfil"; si no subió ninguna, sus iniciales. El nombre está al lado */}
+                <Avatar image={profilePicture} name={`${name} ${lastName}`} className="size-20 border-2 border-primary/20 text-2xl"/>
                 <div className="min-w-0">
                     <h2 className="text-lg font-semibold leading-tight text-text">
                         {name} {lastName}
@@ -57,12 +58,10 @@ export default function ATCard ({ id, name = "", lastName = "", dateOfBirth = ""
                     </div>
                 </section>
                 <section className="mt-auto rounded-xl bg-surface-alt p-3">
-                    <h3 className="mb-1 text-xs font-medium text-text-secondary">
+                    <h3 className="mb-2 text-xs font-medium text-text-secondary">
                         Disponibilidad Horaria
                     </h3>
-                    <p className="text-sm font-medium text-text">
-                        {formatAvailability (availability)}
-                    </p>
+                    <AvailabilitySummary availability={availability} compact/>
                 </section>          
             </div>
             <div className="mt-5 border-t border-border pt-4 shrink-0">

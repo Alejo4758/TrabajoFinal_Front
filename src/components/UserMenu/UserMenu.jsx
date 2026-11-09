@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { useAuth } from "../../hooks/useAuth";
-import { PROFILE_LINKS, ROLE_LABELS } from "../../utils/constants";
+import { PROFILE_LINKS, PROFILE_ROUTE, ROLE_LABELS, ROLES } from "../../utils/constants";
 import { shortName } from "../../utils/utils";
 import Avatar from "../Avatar/Avatar";
 import Icon from "../Icon/Icon";
@@ -45,6 +45,9 @@ export default function UserMenu () {
 
     const links = PROFILE_LINKS.filter (link => link.roles.includes (user.role));
 
+    // El backend lo calcula al iniciar sesión: le faltan datos del perfil profesional que el registro no pide
+    const profileIncomplete = user.role === ROLES.AT && user.isProfileIncomplete === true;
+
     return (
         <div ref={containerRef} className="relative">
             <button ref={buttonRef} type="button" onClick={() => setOpen (value => !value)} aria-haspopup="true" aria-expanded={open}
@@ -53,6 +56,17 @@ export default function UserMenu () {
             >
                 <Avatar image={user.profilePicture} name={avatarName} className="size-10 text-sm sm:size-11"/>
             </button>
+
+            {/* Aviso de perfil incompleto. Es un enlace aparte (un enlace no puede ir dentro de un botón) y el avatar sigue abriendo
+                el menú: si llevara al perfil, el A.T. no podría llegar a "Cerrar sesión". El before: agranda la zona que se puede
+                tocar a 24px sin agrandar el círculo */}
+            {profileIncomplete && (
+                <Link to={PROFILE_ROUTE} onClick={() => setOpen (false)} aria-label="Tu perfil profesional está incompleto. Completalo" title="Completá tu perfil profesional"
+                    className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-danger text-xs font-bold leading-none text-white ring-2 ring-surface before:absolute before:-inset-1 focus:outline-none focus-visible:ring-primary"
+                >
+                    <span aria-hidden="true">!</span>
+                </Link>
+            )}
 
             {open && (
                 <div className="absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded-2xl border border-border bg-surface shadow-xl shadow-primary/5">

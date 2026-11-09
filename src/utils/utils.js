@@ -10,9 +10,13 @@
     return age;
 };
 
+// "2022-03", "2022-03-01" o "2022-03-01T00:00:00.000Z" -> "mar 2022". Sin fecha es un trabajo actual.
+// Se toman el año y el mes tal como vienen: con new Date, una fecha guardada el día 1 a las 00:00 UTC
+// en Argentina todavía es el mes anterior y se mostraba "feb 2022"
 export const formatMonthYear = dateString => {
     if (!dateString) return "Actualidad";
-    const date = new Date (dateString);
+    const m = /^(\d{4})-(\d{2})/.exec (dateString);
+    const date = m ? new Date (Number (m[1]), Number (m[2]) - 1, 1) : new Date (dateString);
     return date.toLocaleDateString ('es-AR', { month: 'short', year: 'numeric' }).replace ('.', '');
 };
 
@@ -70,25 +74,79 @@ export const formatRelativeTime = date => {
     return "Recién";
 };
 
-export function formatAvailability (availability = []) {
-    if (!Array.isArray(availability) || availability.length === 0) return "A convenir";
+// Días de la semana en el orden en que se muestran: de lunes a domingo (dayOfWeek: 0 = domingo ... 6 = sábado)
+export const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
-    const groupedDays = new Map ();
+// Disponibilidad horaria ([{ dayOfWeek, startTime, endTime }]) agrupada por día, de lunes a domingo y con las franjas
+// ordenadas por hora: [{ dayOfWeek, day: "Lunes", ranges: [{ startTime, endTime }] }]. Solo los días que tienen horarios
+export const availabilityByDay = (availability = []) => {
+    if (!Array.isArray (availability)) return [];
 
-    availability.forEach (({ dayOfWeek, startTime, endTime }) => {
-        const day = DAYS_OF_WEEK[dayOfWeek];
+    return WEEK_ORDER
+        .map (dayOfWeek => ({
+            dayOfWeek,
+            day: DAYS_OF_WEEK[dayOfWeek],
+            ranges: availability
+                .filter (range => range?.dayOfWeek === dayOfWeek && range.startTime && range.endTime)
+                .sort ((a, b) => a.startTime.localeCompare (b.startTime)),
+        }))
+        .filter (item => item.ranges.length > 0);
+};
 
-        if (dayOfWeek == null || !day || !startTime || !endTime) return;
+// "09:00" -> "9", "09:30" -> "9:30"
+const formatHour = time => {
+    const [hours, minutes] = time.split (":");
+    return minutes === "00" ? String (Number (hours)) : `${Number (hours)}:${minutes}`;
+};
 
-        if (!groupedDays.has (day)) groupedDays.set (day, []);
+// { startTime: "09:00", endTime: "13:30" } -> "9 a 13:30 h"
+export const formatTimeRange = ({ startTime, endTime }) => `${formatHour (startTime)} a ${formatHour (endTime)} h`;
 
-        groupedDays.get(day).push(`${startTime} a ${endTime}`);
+// ["Lunes", "miércoles", "viernes"] -> "Lunes, miércoles y viernes"
+const joinWithAnd = items => (items.length <= 1 ? items.join ("") : `${items.slice (0, -1).join (", ")} y ${items.at (-1)}`);
+
+// Días (dayOfWeek, en orden de lunes a domingo) -> "Lunes a viernes", "Lunes y miércoles", "Lunes a miércoles y viernes".
+// Tres o más días seguidos se nombran como rango
+const daysLabel = days => {
+    const runs = [];
+    days.forEach (dayOfWeek => {
+        const position = WEEK_ORDER.indexOf (dayOfWeek);
+        const run = runs.at (-1);
+        if (run && WEEK_ORDER.indexOf (run.at (-1)) === position - 1) run.push (dayOfWeek);
+        else runs.push ([dayOfWeek]);
     });
 
-    if (groupedDays.size === 0) return "A convenir";
+    const parts = runs.flatMap (run => (run.length >= 3
+        ? [`${DAYS_OF_WEEK[run[0]]} a ${DAYS_OF_WEEK[run.at (-1)]}`]
+        : run.map (dayOfWeek => DAYS_OF_WEEK[dayOfWeek])));
+    const text = joinWithAnd (parts).toLowerCase ();
 
-    return [...groupedDays.entries()]
-        .map (([day, hours]) => `${day}: ${hours.join (", ")}`)
+    return text.charAt (0).toUpperCase () + text.slice (1);
+};
+
+// Disponibilidad agrupada: los días que tienen exactamente los mismos horarios van juntos, en orden de lunes a domingo.
+// [{ label: "Lunes a viernes", days: [1, 2, 3, 4, 5], ranges: [{ startTime, endTime }] }]
+export const groupAvailability = (availability = []) => {
+    const groups = [];
+
+    availabilityByDay (availability).forEach (({ dayOfWeek, ranges }) => {
+        const key = ranges.map (range => `${range.startTime}-${range.endTime}`).join (",");
+        const group = groups.find (item => item.key === key);
+        if (group) group.days.push (dayOfWeek);
+        else groups.push ({ key, days: [dayOfWeek], ranges });
+    });
+
+    return groups.map (({ days, ranges }) => ({ label: daysLabel (days), days, ranges }));
+};
+
+// "Lunes a viernes: 9 a 13 h · Sábado: 10 a 12 h". Sin horarios: "A convenir"
+export function formatAvailability (availability = []) {
+    const groups = groupAvailability (availability);
+
+    if (groups.length === 0) return "A convenir";
+
+    return groups
+        .map (({ label, ranges }) => `${label}: ${joinWithAnd (ranges.map (formatTimeRange))}`)
         .join (" · ");
 }
 
