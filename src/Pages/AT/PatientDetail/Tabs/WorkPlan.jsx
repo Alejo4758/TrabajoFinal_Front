@@ -12,7 +12,7 @@ import BulletList from "../../../../components/AT/BulletList/BulletList";
 import PlanWizard from "../../../../components/AT/PlanWizard/PlanWizard";
 
 export default function WorkPlan ({ patient, onPlanSaved }) {
-    const { user } = useAuth ();
+    const { token, user } = useAuth ();
 
     const [editing, setEditing] = useState (false);
     const [savedPlan, setSavedPlan] = useState (null);
@@ -30,7 +30,7 @@ export default function WorkPlan ({ patient, onPlanSaved }) {
 
     if (editing) {
         return (
-            <PlanWizard patient={patient} initialPlan={plan} onSave={draft => savePlan (patient.id, draft)} onSaved={handleSaved} onCancel={() => setEditing (false)}/>
+            <PlanWizard patient={patient} initialPlan={plan} onSave={draft => savePlan (patient.id, draft, token)} onSaved={handleSaved} onCancel={() => setEditing (false)}/>
         );
     }
 

@@ -30,7 +30,8 @@ function focusTargetFor (key) {
 }
 
 export default function PlanWizard ({ patient, initialPlan, onSave, onCancel, onSaved }) {
-  const [plan, setPlanState] = useState (() => (initialPlan ? JSON.parse (JSON.stringify (normalizePlan (initialPlan))) : emptyPlan ()));
+  // Un plan nuevo arranca con el diagnóstico que la familia cargó para el paciente (el profesional lo puede corregir)
+  const [plan, setPlanState] = useState (() => (initialPlan ? JSON.parse (JSON.stringify (normalizePlan (initialPlan))) : { ...emptyPlan (), diagnosis: patient?.diagnosis ?? "" }));
   const [stepIndex, setStepIndex] = useState (0);
   const [visited, setVisited] = useState ([0]);
   const [errors, setErrors] = useState ({});
