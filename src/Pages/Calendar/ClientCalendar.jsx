@@ -80,6 +80,8 @@ export default function ClientCalendar ({ userId }) {
                         {ACTIVITY_TYPES[activity.type]?.label ?? "Turno"} con {professionalName (activity)}
                       </h2>
                       <p className="m-0 mt-1 text-sm text-text-secondary">{formatDateTime (activity.startDate)} a {formatTime (activity.finishDate)}</p>
+                      {/* Una misma cuenta puede tener varias personas a cargo: se aclara para cuál es el turno */}
+                      {fullName (activity.patient) && <p className="m-0 mt-1 text-sm text-text">Para: {fullName (activity.patient)}</p>}
                     </div>
                     <span className={`shrink-0 rounded-lg border px-2 py-0.5 text-xs font-medium ${state?.badge ?? ""}`}>{state?.label ?? "—"}</span>
                   </div>

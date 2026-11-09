@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getMyATCalendar, getATLinkedClients, getHolidaysByYear, updateCalendarActivity } from "../../services/calendarService";
+import { getMyATCalendar, getATLinkedPatients, getHolidaysByYear, updateCalendarActivity } from "../../services/calendarService";
 import { useCalendarRealtime } from "../../hooks/useCalendarRealtime";
 import { ACTIVITY_TYPES, ACTIVITY_STATES, WEEKDAYS, buildMonthGrid, dateKey, formatLongDate, formatMonth, formatTime, formatDateTime, fullName, holidaysToMap, parseDate, safeText, sortByStart } from "./calendarUtils";
 import ActivityModal from "./ActivityModal";
@@ -13,7 +13,7 @@ export default function ATCalendar ({ userId }) {
   const [viewDate, setViewDate] = useState (new Date (today.getFullYear (), today.getMonth (), 1));
   const [selectedKey, setSelectedKey] = useState (dateKey (today));
   const [activities, setActivities] = useState ([]);
-  const [clients, setClients] = useState ([]);
+  const [patients, setPatients] = useState ([]);
   const [holidaysByYear, setHolidaysByYear] = useState ({});
   const [filter, setFilter] = useState ("ALL");
   const [showCancelled, setShowCancelled] = useState (false);
@@ -57,10 +57,9 @@ export default function ATCalendar ({ userId }) {
   useEffect (() => {
     let cancelled = false;
 
-    getATLinkedClients ().then (result => {
+    getATLinkedPatients ().then (result => {
       if (cancelled) return;
-      // Cada elemento puede venir como usuario directo o anidado en "user"
-      setClients (result.data.map (item => item?.user ?? item).filter (item => item?.id != null));
+      setPatients (result.data.filter (item => item?.id != null));
     });
 
     return () => {
@@ -160,7 +159,9 @@ export default function ATCalendar ({ userId }) {
               {pending.map (activity => (
                 <li key={activity.id} className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
-                    <p className="m-0 font-semibold text-text">{fullName (activity.user) || "Cliente"}</p>
+                    {/* activity.patient es para quién es la entrevista; activity.user, el titular de la cuenta que la pidió */}
+                    <p className="m-0 font-semibold text-text">{fullName (activity.patient) || fullName (activity.user) || "Paciente"}</p>
+                    {fullName (activity.patient) && fullName (activity.user) && fullName (activity.user) !== fullName (activity.patient) && <p className="m-0 text-sm text-text-secondary">La pidió {fullName (activity.user)}</p>}
                     <p className="m-0 text-sm text-text-secondary">{formatDateTime (activity.startDate)} a {formatTime (activity.finishDate)}</p>
                     {safeText (activity.description) && <p className="m-0 mt-1 break-words text-sm text-text-secondary">{safeText (activity.description)}</p>}
                   </div>
@@ -228,7 +229,7 @@ export default function ATCalendar ({ userId }) {
                 {dayActivities.map (activity => {
                   const state = ACTIVITY_STATES[activity.state];
                   const type = ACTIVITY_TYPES[activity.type];
-                  const patient = fullName (activity.user);
+                  const patient = fullName (activity.patient);
 
                   return (
                     <li key={activity.id} className="rounded-xl border border-border p-4">
@@ -258,7 +259,7 @@ export default function ATCalendar ({ userId }) {
         </div>
       </div>
 
-      {modal && <ActivityModal activity={modal.activity} defaultDate={selectedKey} clients={clients} holidays={holidays} onClose={closeModal} onSaved={handleSaved}/>}
+      {modal && <ActivityModal activity={modal.activity} defaultDate={selectedKey} patients={patients} holidays={holidays} onClose={closeModal} onSaved={handleSaved}/>}
     </main>
   );
 }

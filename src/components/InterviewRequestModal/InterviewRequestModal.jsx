@@ -2,19 +2,30 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { requestInterview } from "../../services/calendarService";
 import { combineDateTime } from "../../Pages/Calendar/calendarUtils";
+import { useMyPatients } from "../../hooks/useMyPatients";
 import FormField from "../FormField/FormField";
 import Icon from "../Icon/Icon";
+import PatientForm from "../PatientForm/PatientForm";
+import PatientPicker from "../PatientPicker/PatientPicker";
 
 const MESSAGE_MAX = 500;
 const DURATION_MINUTES = 30;
 
-// Modal para que un cliente sugiera fecha y hora de entrevista. El cliente sale del token: solo se envía el AT
+// Modal para que un cliente sugiera fecha y hora de entrevista. El cliente sale del token: se envían el AT
+// y la persona para la que se pide la entrevista (una de las que tiene a su cargo)
 export default function InterviewRequestModal ({ at, onClose, onSuccess }) {
-  const [form, setForm] = useState ({ date: "", time: "", message: "" });
+  const { patients, loading: loadingPatients, error: patientsError, upsertPatient } = useMyPatients ();
+
+  const [form, setForm] = useState ({ patientId: "", date: "", time: "", message: "" });
   const [errors, setErrors] = useState ({});
   const [serverError, setServerError] = useState ("");
   const [sending, setSending] = useState (false);
   const [sent, setSent] = useState (false);
+  // true mientras se carga una persona nueva: el formulario de la entrevista se reemplaza por el de la persona
+  const [addingPatient, setAddingPatient] = useState (false);
+
+  // Con una sola persona cargada no hace falta elegirla
+  const patientId = form.patientId || (patients.length === 1 ? String (patients[0].id) : "");
 
   useEffect (() => {
     const onKey = event => { if (event.key === "Escape" && !sending) onClose (); };
@@ -34,11 +45,20 @@ export default function InterviewRequestModal ({ at, onClose, onSuccess }) {
     setServerError ("");
   };
 
+  // La persona recién cargada queda elegida y se vuelve al formulario de la entrevista, que conserva lo ya escrito
+  const handlePatientSaved = patient => {
+    upsertPatient (patient);
+    setForm (prev => ({ ...prev, patientId: String (patient.id) }));
+    setErrors (prev => ({ ...prev, patientId: "" }));
+    setAddingPatient (false);
+  };
+
   const handleSubmit = async event => {
     event.preventDefault ();
 
     const start = form.date && form.time ? combineDateTime (form.date, form.time) : null;
     const found = {};
+    if (!patientId) found.patientId = "Indicá para quién es la entrevista";
     if (!form.date) found.date = "Elegí una fecha";
     else if (start && start <= new Date ()) found.date = "La fecha y hora deben ser futuras";
     if (!form.time) found.time = "Elegí una hora";
@@ -49,7 +69,7 @@ export default function InterviewRequestModal ({ at, onClose, onSuccess }) {
     const finish = new Date (start.getTime () + DURATION_MINUTES * 60000);
 
     setSending (true);
-    const { error } = await requestInterview ({ profileATId: at.id, startDate: start.toISOString (), finishDate: finish.toISOString (), message: form.message.trim () });
+    const { error } = await requestInterview ({ profileATId: at.id, patientId: Number (patientId), startDate: start.toISOString (), finishDate: finish.toISOString (), message: form.message.trim () });
     setSending (false);
 
     if (error) {
@@ -79,6 +99,14 @@ export default function InterviewRequestModal ({ at, onClose, onSuccess }) {
               <button type="button" onClick={onClose} className="cursor-pointer rounded-xl px-6 py-3 text-sm font-semibold text-text-secondary transition hover:bg-surface-alt">Cerrar</button>
             </div>
           </div>
+        ) : addingPatient ? (
+          <div className="space-y-5">
+            <div>
+              <h2 id="interview-modal-title" className="m-0 text-2xl font-bold text-text">¿Para quién es la entrevista?</h2>
+              <p className="m-0 mt-2 text-sm leading-relaxed text-text-secondary">Cargá los datos de la persona que va a recibir el acompañamiento. Quedan guardados para tus próximos pedidos</p>
+            </div>
+            <PatientForm idPrefix="interview-patient" onSaved={handlePatientSaved} onCancel={() => setAddingPatient (false)}/>
+          </div>
         ) : (
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
             <div className="flex items-start justify-between gap-4">
@@ -92,6 +120,8 @@ export default function InterviewRequestModal ({ at, onClose, onSuccess }) {
             </div>
 
             {serverError && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-center text-sm text-red-600">{serverError}</div>}
+
+            <PatientPicker id="interview-patientId" label="¿Para quién es la entrevista?" patients={patients} loading={loadingPatients} loadError={patientsError} value={patientId} onChange={handleChange} onAdd={() => setAddingPatient (true)} error={errors.patientId}/>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>

@@ -66,7 +66,9 @@ const fetchList = async path => {
 const write = async (path, method, payload) => {
   const result = await request (path, { method, body: JSON.stringify (payload) });
 
-  if (result.status === 409) {
+  // Solo la superposición horaria se puede forzar: el backend la marca con warning y manda la actividad con la que choca.
+  // Cualquier otro 409 (por ejemplo "ya hay una entrevista pendiente") es un error común y se muestra con su mensaje
+  if (result.status === 409 && (result.body?.warning || result.body?.conflictingActivity)) {
     return {
       data: null,
       warning: result.body?.message || "La actividad se superpone con otra",
@@ -91,8 +93,8 @@ export const getMyATCalendar = ({ start, end, includeCancelled = false } = {}) =
 
 export const getMyClientCalendar = () => fetchList ("/api/calendar/client/me");
 
-// Clientes vinculados al AT, para el selector de paciente
-export const getATLinkedClients = () => fetchList ("/api/calendar/clients");
+// Pacientes vinculados al AT (con acompañamiento o con algún turno previo), para el selector de paciente
+export const getATLinkedPatients = () => fetchList ("/api/calendar/patients");
 
 // Feriados nacionales (el backend consulta ArgentinaDatos)
 export const getHolidaysByYear = year => fetchList (`/api/calendar/holidays/${encodeURIComponent (year)}`);
@@ -101,7 +103,8 @@ export const createCalendarActivity = payload => write ("/api/calendar", "POST",
 
 export const updateCalendarActivity = (id, payload) => write (`/api/calendar/${encodeURIComponent (id)}`, "PATCH", payload);
 
-// payload = { profileATId, startDate, finishDate, message }
+// payload = { profileATId, patientId, startDate, finishDate, message }
+// patientId es la persona para la que se pide la entrevista: el backend verifica que sea una de las que cargó quien la pide
 export const requestInterview = async payload => {
   const result = await write ("/api/calendar/interview-request", "POST", payload);
   // Una entrevista que choca con la agenda del AT la resuelve el AT: para el cliente un 409 es un error común
