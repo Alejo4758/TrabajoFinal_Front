@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import { 
-    getDepartments, 
-    getLocalities, 
-    getProvinces, 
-    getFilterOptions 
-} from "../../services/itemsService";
+import { getDepartments, getLocalities, getProvinces, getFilterOptions } from "../../services/itemsService";
 
 export default function FilterBar ({ filters, onApply, disabled = false }) {
     const [form, setForm] = useState (filters);
@@ -155,7 +150,7 @@ export default function FilterBar ({ filters, onApply, disabled = false }) {
     };
 
     return (
-        <form className="mb-8 grid grid-cols-1 gap-4 rounded-2xl border border-border bg-surface p-5 md:grid-cols-2 lg:grid-cols-4" onSubmit={handleSubmit}>
+        <form className="mb-8 grid grid-cols-1 gap-4 rounded-2xl border border-border bg-surface p-5 md:grid-cols-2 lg:grid-cols-3" onSubmit={handleSubmit}>
             <div>
                 <label className="mb-2 block text-sm font-medium text-text" htmlFor="province">
                     Provincia
