@@ -67,7 +67,7 @@ export const NAV_LINKS = [
   { to: "/dashboardAT", label: "Mi panel", icon: "home", roles: [ROLES.AT] },
   { to: "/linkRequests", label: "Solicitudes", icon: "users", roles: [ROLES.AT] },
   { to: "/panelAdmin", label: "Administración", icon: "shield", roles: [ROLES.ADMIN] },
-  { to: "/calendario", label: "Agenda", icon: "calendar", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] },
+  { to: "/calendario", label: "Agenda", icon: "calendar", roles: [ROLES.CLIENT, ROLES.AT] },
   { to: "/chat", label: "Mensajes", icon: "chat", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] }
 ];
 
