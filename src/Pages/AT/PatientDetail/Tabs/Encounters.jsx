@@ -3,7 +3,8 @@ import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
 
 import { formatDate, normalize } from "../../../../utils/utils";
-import { createSession } from "../../../../services/sessionService";
+import { createSession, compareSessions } from "../../../../services/sessionService";
+import { useAuth } from "../../../../hooks/useAuth";
 
 import SessionFormModal from "..//../../../components/AT/SessionFrom/SessionModal";
 import { levelInfo } from "../../../../utils/scale";
@@ -27,6 +28,7 @@ export default function Encounters({
   sessions = [],
   onSessionsChange,
 }) {
+  const { token } = useAuth();
   const [objective, setObjective] = useState("");
   const [query, setQuery] = useState("");
   const [from, setFrom] = useState("");
@@ -98,10 +100,8 @@ export default function Encounters({
 
         return true;
       })
-      .sort((a, b) => {
-        const dateComparison = b.date.localeCompare(a.date);
-        return dateComparison || String(b.id).localeCompare(String(a.id));
-      });
+      // Del más reciente al más antiguo, por fecha y hora
+      .sort((a, b) => compareSessions(b, a));
   }, [sessions, objective, query, from, to]);
 
   const hasFilters = Boolean(objective || query || from || to);
@@ -121,17 +121,17 @@ export default function Encounters({
   };
 
   const handleSave = async (data) => {
-    const saved = await createSession(patient.id, data);
+    const saved = await createSession(patient.id, data, token);
 
     const nextSessions = [...sessions, saved].sort((a, b) =>
-      b.date.localeCompare(a.date)
+      compareSessions(b, a)
     );
 
     onSessionsChange?.(nextSessions);
 
     clearFilters();
     setNotice(
-      `Encuentro del ${formatDate(saved.date)} registrado correctamente.`
+      `Encuentro del ${formatDate(saved.date)} a las ${saved.time} registrado correctamente. También quedó en tu calendario.`
     );
 
     return saved;
@@ -338,6 +338,7 @@ export default function Encounters({
                             </p>
 
                             <p className="text-sm text-text-muted">
+                              {session.time ? `${session.time} h · ` : ""}
                               {session.duration} min ·{" "}
                               {(session.activities ?? []).length}{" "}
                               {(session.activities ?? []).length === 1
