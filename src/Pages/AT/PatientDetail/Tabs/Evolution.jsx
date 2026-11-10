@@ -12,6 +12,7 @@ import {
 } from "recharts";
 
 import { formatDate } from "../../../../utils/utils";
+import { compareSessions } from "../../../../services/sessionService";
 
 const LINE_COLORS = [
   "#2563eb",
@@ -85,17 +86,17 @@ export default function Evolution({ patient, sessions = [] }) {
   );
 
   const records = useMemo(() => {
-    const ordered = [...sessions].sort((a, b) => {
-      const comparison = a.date.localeCompare(b.date);
-      return comparison || String(a.id).localeCompare(String(b.id));
+    // Del más antiguo al más reciente, por fecha y hora
+    const ordered = [...sessions].sort(compareSessions);
+
+    // Los días con más de un encuentro muestran la hora en el eje, para distinguir los puntos
+    const encountersPerDate = {};
+    ordered.forEach((session) => {
+      encountersPerDate[session.date] =
+        (encountersPerDate[session.date] ?? 0) + 1;
     });
 
-    const sameDateCount = {};
-
     return ordered.map((session) => {
-      sameDateCount[session.date] =
-        (sameDateCount[session.date] ?? 0) + 1;
-
       const goals = getSessionGoals(session);
       const values = {};
 
@@ -110,12 +111,13 @@ export default function Evolution({ patient, sessions = [] }) {
       });
 
       const dateLabel = getDateLabel(session.date);
-      const count = sameDateCount[session.date];
+      const sharesDate = encountersPerDate[session.date] > 1;
 
       return {
         id: session.id,
         date: session.date,
-        label: count > 1 ? `${dateLabel} (${count})` : dateLabel,
+        time: session.time ?? null,
+        label: sharesDate && session.time ? `${dateLabel} ${session.time}` : dateLabel,
         ...values,
       };
     });
@@ -129,6 +131,7 @@ export default function Evolution({ patient, sessions = [] }) {
         .filter((record) => record[key] != null)
         .map((record) => ({
           date: record.date,
+          time: record.time,
           label: record.label,
           value: record[key],
         }));
@@ -389,13 +392,15 @@ export default function Evolution({ patient, sessions = [] }) {
                     labelFormatter={(_, payload) => {
                       const record = payload?.[0]?.payload;
 
-                      return record
-                        ? formatDate(record.date, {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })
-                        : "";
+                      if (!record) return "";
+
+                      const day = formatDate(record.date, {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      });
+
+                      return record.time ? `${day}, ${record.time} h` : day;
                     }}
                   />
 
@@ -504,6 +509,7 @@ export default function Evolution({ patient, sessions = [] }) {
                     month: "long",
                     year: "numeric",
                   })}
+                  {objective.latest.time && `, ${objective.latest.time} h`}
                 </p>
               ) : (
                 <p className="mt-2 text-sm text-text-muted">
