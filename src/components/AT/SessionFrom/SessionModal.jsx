@@ -17,9 +17,22 @@ function todayISO() {
   ].join("-");
 }
 
+function nowTime() {
+  const now = new Date();
+
+  return [
+    String(now.getHours()).padStart(2, "0"),
+    String(now.getMinutes()).padStart(2, "0"),
+  ].join(":");
+}
+
+const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
+
 function createInitialForm() {
   return {
     date: todayISO(),
+    // Sin hora por defecto: el AT la elige, así no queda registrada una hora que no corresponde
+    time: "",
     duration: "60",
     stageId: "",
     ratings: {},
@@ -254,6 +267,14 @@ export default function SessionFormModal({
       found.date = "La fecha no puede ser futura.";
     }
 
+    if (!form.time) {
+      found.time = "Indicá la hora de inicio.";
+    } else if (!TIME_REGEX.test(form.time)) {
+      found.time = "Ingresá una hora válida.";
+    } else if (form.date === todayISO() && form.time > nowTime()) {
+      found.time = "La hora no puede ser futura.";
+    }
+
     const duration = Number(form.duration);
 
     if (
@@ -311,6 +332,7 @@ export default function SessionFormModal({
     try {
       const saved = await onSave({
         date: form.date,
+        time: form.time,
         duration: Number(form.duration),
         stageId: stage.id,
         stageName: stage.name,
@@ -420,7 +442,7 @@ export default function SessionFormModal({
               </div>
             )}
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               <div>
                 <label htmlFor="session-date" className="mb-1.5 block text-sm font-medium">
                   Fecha
@@ -435,6 +457,22 @@ export default function SessionFormModal({
                   className="w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm"
                 />
                 <FieldError message={errors.date} />
+              </div>
+
+              <div>
+                <label htmlFor="session-time" className="mb-1.5 block text-sm font-medium">
+                  Hora de inicio
+                </label>
+                <input
+                  id="session-time"
+                  type="time"
+                  max={form.date === todayISO() ? nowTime() : undefined}
+                  value={form.time}
+                  onChange={(event) => updateField("time", event.target.value)}
+                  aria-invalid={Boolean(errors.time)}
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm"
+                />
+                <FieldError message={errors.time} />
               </div>
 
               <div>
@@ -456,7 +494,7 @@ export default function SessionFormModal({
               </div>
 
               {stages.length > 1 && (
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-3">
                   <label htmlFor="session-stage" className="mb-1.5 block text-sm font-medium">
                     Ámbito del encuentro
                   </label>

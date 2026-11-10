@@ -5,6 +5,7 @@
 
 import { RELATIONSHIP_LABELS, TREATMENT_STATUS_LABELS } from "../utils/constants";
 import { ageFromDate, formatRelativeTime, fullName } from "../utils/utils";
+import { getSessions } from "./sessionService";
 
 const BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace (/\/+$/, "");
 
@@ -78,7 +79,7 @@ const localDay = date => `${date.getFullYear ()}-${pad (date.getMonth () + 1)}-$
 const localTime = date => `${pad (date.getHours ())}:${pad (date.getMinutes ())}`;
 
 // Convierte la respuesta del backend a la forma que muestran PatientDetail y sus pestañas
-const toPatientDetail = data => {
+const toPatientDetail = (data, sessions) => {
   const startDate = parseDate (data?.treatment?.startDate);
   const lastActivity = parseDate (data?.lastActivity);
   const nextMeeting = parseDate (data?.nextMeeting?.startDate);
@@ -107,18 +108,26 @@ const toPatientDetail = data => {
       email: data.tutor.email ?? "",
     },
     plan: data.plan ?? null,
-    // Encuentros, evolución, red de apoyo e informes todavía no tienen backend: van vacíos hasta que existan
-    sessions: [],
+    // Encuentros registrados (la pestaña Evolución se arma con estos mismos datos)
+    sessions,
+    // Red de apoyo e informes todavía no tienen backend: van vacíos hasta que existan
     objectives: [],
     supportNetwork: [],
     reports: [],
   };
 };
 
-// Detalle de un paciente del AT logueado. El backend responde 404 si no tiene un acompañamiento con ese paciente
+// Detalle de un paciente del AT logueado, con su historial de encuentros (se piden en paralelo).
+// El backend responde 404 si no tiene un acompañamiento con ese paciente
 export const getPatient = async (patientId, token) => {
   if (!token) throw new Error ("Tenés que iniciar sesión para ver al paciente");
 
+  const [data, sessions] = await Promise.all ([getPatientData (patientId, token), getSessions (patientId, token)]);
+
+  return toPatientDetail (data, sessions);
+};
+
+const getPatientData = async (patientId, token) => {
   let response;
   try {
     response = await fetch (`${BASE_URL}/api/at/patients/${encodeURIComponent (patientId)}`, {
@@ -134,5 +143,5 @@ export const getPatient = async (patientId, token) => {
 
   if (!response.ok) throw new Error (responseBody?.message || responseBody?.error || `Error de backend: ${response.status}`);
 
-  return toPatientDetail (responseBody?.data ?? responseBody);
+  return responseBody?.data ?? responseBody;
 };
