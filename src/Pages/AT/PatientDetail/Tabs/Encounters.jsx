@@ -8,6 +8,7 @@ import { useAuth } from "../../../../hooks/useAuth";
 
 import SessionFormModal from "..//../../../components/AT/SessionFrom/SessionModal";
 import { levelInfo } from "../../../../utils/scale";
+import { sessionTarget } from "../../../../utils/boardModel";
 
 function getSessionGoals(session) {
   // Compatibilidad con los registros anteriores durante la transición.
@@ -23,10 +24,14 @@ function goalText(item) {
   return item.goalText ?? "Objetivo sin descripción";
 }
 
+// readOnly: la usa el tablero de la red de apoyo (sin registrar encuentros ni enlaces al plan del AT).
+// renderThread(target): dibuja el hilo de aportes de cada encuentro. Lo pasan PatientDetail y el tablero.
 export default function Encounters({
   patient,
   sessions = [],
   onSessionsChange,
+  readOnly = false,
+  renderThread,
 }) {
   const { token } = useAuth();
   const [objective, setObjective] = useState("");
@@ -40,7 +45,7 @@ export default function Encounters({
 
   const stages = patient.plan?.stages ?? [];
 
-  const canRegister = stages.some(
+  const canRegister = !readOnly && stages.some(
     (stage) => (stage.specificGoals ?? []).length > 0
   );
 
@@ -171,7 +176,16 @@ export default function Encounters({
     <div className="space-y-6">
       {noticeBar}
 
-      {sessions.length === 0 ? (
+      {sessions.length === 0 && readOnly ? (
+        <div className="rounded-xl border border-border bg-surface px-6 py-12 text-center">
+          <h3 className="text-lg font-semibold">
+            Todavía no hay encuentros registrados
+          </h3>
+          <p className="mx-auto mt-2 max-w-lg text-sm text-text-secondary">
+            Cuando el acompañante registre los encuentros, vas a poder consultarlos acá y dejar tus aportes.
+          </p>
+        </div>
+      ) : sessions.length === 0 ? (
         <div className="rounded-xl border border-border bg-surface px-6 py-12 text-center">
           <h3 className="text-lg font-semibold">
             Todavía no registraste encuentros
@@ -290,7 +304,7 @@ export default function Encounters({
               </button>
             )}
 
-            {!canRegister && (
+            {!readOnly && !canRegister && (
               <p className="mt-4 text-sm text-text-muted">
                 Para registrar nuevos encuentros hace falta un plan con objetivos.{" "}
                 <Link
@@ -419,6 +433,8 @@ export default function Encounters({
                             </p>
                           </div>
                         )}
+
+                        {renderThread?.(sessionTarget(session))}
                       </div>
                     </details>
                   </li>
@@ -438,7 +454,7 @@ export default function Encounters({
         </>
       )}
 
-      {showForm && (
+      {showForm && !readOnly && (
         <SessionFormModal
           patient={patient}
           onSave={handleSave}

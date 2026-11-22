@@ -5,13 +5,14 @@ import { formatDate } from "../../../../utils/utils";
 import { savePlan } from "../../../../services/planService";
 import { useAuth } from "../../../../hooks/useAuth";
 import { frequencyLabel, normalizePlan, settingLabel } from "../../../../utils/planModel";
+import { planTarget } from "../../../../utils/boardModel";
 import ActionButton  from "../../../../components/AT/ActionButton/ActionButton";
 import Pill from "../../../../components/AT/Pill/Pill";
 import EmptyState from "../../../../components/AT/EmptyState/EmptyState";
 import BulletList from "../../../../components/AT/BulletList/BulletList";
 import PlanWizard from "../../../../components/AT/PlanWizard/PlanWizard";
 
-export default function WorkPlan ({ patient, onPlanSaved }) {
+export default function WorkPlan ({ patient, onPlanSaved, renderThread }) {
     const { token, user } = useAuth ();
 
     const [editing, setEditing] = useState (false);
@@ -203,6 +204,7 @@ export default function WorkPlan ({ patient, onPlanSaved }) {
             )}
 
             {!isDraft && <PrintablePlan plan={plan} patient={patient} authorName={authorName}/>}
+            {renderThread?.(planTarget())}
         </div>
     )
 }

@@ -1,9 +1,10 @@
-
 import { useParams, useSearchParams, Link } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { getPatient } from "../../../services/patientService";
 import { useAuth } from "../../../hooks/useAuth";
+import { useContributions } from "../../../hooks/useContributions";
+import Contributions from "../../../components/AT/Contributions/Contributions";
 import { initials, formatDate } from "../../../utils/utils";
 
 import Pill from "../../../components/AT/Pill/Pill";
@@ -13,6 +14,7 @@ import Encounters from "./Tabs/Encounters";
 import SupportNetwork from "./Tabs/SupportNetwork";
 import Reports from "./Tabs/Reports";
 import WorkPlan from "./Tabs/WorkPlan";
+import NetworkContributions from "./Tabs/NetworkContributions";
 
 const TABS = [
   { id: "summary", label: "Resumen", Component: Summary },
@@ -20,6 +22,7 @@ const TABS = [
   { id: "encounters", label: "Encuentros", Component: Encounters },
   { id: "evolution", label: "Evolución", Component: Evolution },
   { id: "supportNetwork", label: "Red de apoyo", Component: SupportNetwork },
+  { id: "contributions", label: "Aportes", Component: NetworkContributions },
   { id: "reports", label: "Informes", Component: Reports },
 ];
 
@@ -35,7 +38,7 @@ function HubSkeleton() {
 
 export default function PatientDetail() {
   const { id } = useParams();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [searchParams] = useSearchParams();
 
   const [patient, setPatient] = useState(null);
@@ -74,6 +77,22 @@ export default function PatientDetail() {
       cancelled = true;
     };
   }, [id, token]);
+
+  // Quién escribe cuando el AT deja un aporte o responde. En el backend, el autor sale del token
+  const viewer = useMemo(() => user ? ({
+    key: `user:${user.id}`,
+    name: [user.name, user.lastName].filter(Boolean).join(" ") || "Acompañante",
+    role: "AT",
+    relationship: "",
+    isAT: true,
+  }) : null, [user]);
+
+  // Un solo pedido de aportes para todo el paciente: los hilos de cada pestaña toman de acá lo suyo
+  const contributions = useContributions(id, viewer);
+
+  const renderThread = (target, options = {}) => (
+    <Contributions contributions={contributions} target={target} {...options} />
+  );
 
   const handleSessionsChange = (nextSessions) => {
     setSessions(nextSessions);
@@ -190,6 +209,12 @@ export default function PatientDetail() {
                       }`}
                     >
                       {tab.label}
+                      {tab.id === "contributions" && !active && contributions.unseenCount > 0 && (
+                        <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-white">
+                          {contributions.unseenCount}
+                          <span className="sr-only"> {contributions.unseenCount === 1 ? "aporte nuevo" : "aportes nuevos"}</span>
+                        </span>
+                      )}
                     </Link>
                   </li>
                 );
@@ -203,6 +228,8 @@ export default function PatientDetail() {
               sessions={sessions}
               onSessionsChange={handleSessionsChange}
               onPlanSaved={handlePlanSaved}
+              renderThread={renderThread}
+              contributions={contributions}
             />
           </section>
         </>

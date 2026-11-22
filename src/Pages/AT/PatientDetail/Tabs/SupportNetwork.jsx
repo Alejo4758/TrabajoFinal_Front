@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router';
 import * as defaultService from '../../../../services/networkService';
 import Modal from '../../../../components/AT/Modal/Modal';
 import AccessEditor from '../../../../components/AT/AccessEditor/AccessEditor';
@@ -20,7 +21,7 @@ const Pill = ({ tone = 'neutral', children }) => (
 const smallButton =
   'cursor-pointer rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-text transition hover:bg-surface-alt focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50';
 
-function MemberCard({ member, busy, onAccess, onRemove, onCopy, onResend, onCancel }) {
+function MemberCard({ member, busy, boardHref, onAccess, onRemove, onCopy, onResend, onCancel }) {
   const status = memberStatus(member);
   const displayName = member.name || member.email;
   const statusPill = { active: ['success', 'Activo'], pending: ['warning', 'Invitación pendiente'], expired: ['danger', 'Invitación vencida'] }[status];
@@ -53,6 +54,7 @@ function MemberCard({ member, busy, onAccess, onRemove, onCopy, onResend, onCanc
         <div className="mt-3 flex flex-wrap gap-2">
           {status === 'active' && (
             <>
+              <Link to={boardHref} aria-label={`Ver el tablero tal como lo ve ${displayName}`} className={smallButton}>Ver su tablero</Link>
               <button type="button" disabled={busy} onClick={(e) => onAccess(member, e.currentTarget)} aria-label={`Editar accesos de ${displayName}`} className={smallButton}>Editar accesos</button>
               <button type="button" disabled={busy} onClick={(e) => onRemove(member, e.currentTarget)} aria-label={`Quitar a ${displayName} de la red`} className={`${smallButton} text-red-600 hover:bg-red-50`}>Quitar de la red</button>
             </>
@@ -241,6 +243,7 @@ export default function SupportNetwork({ patient, service = defaultService }) {
 
   const cardProps = (member) => ({
     member,
+    boardHref: `/patient/${patientId}/red/${member.id}`,
     busy: busyId === member.id,
     onAccess: (m, trigger) => openModal({ type: 'access', member: m }, trigger),
     onRemove: (m, trigger) => openModal({ type: 'remove', member: m }, trigger),
