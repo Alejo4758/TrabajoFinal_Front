@@ -13,6 +13,7 @@ import {
 
 import { formatDate } from "../../../../utils/utils";
 import { compareSessions } from "../../../../services/sessionService";
+import { goalTarget } from "../../../../utils/boardModel";
 
 const LINE_COLORS = [
   "#2563eb",
@@ -79,7 +80,9 @@ function getValidLevel(value) {
     : null;
 }
 
-export default function Evolution({ patient, sessions = [] }) {
+// readOnly: textos pensados para la red de apoyo (no para quien registra).
+// renderThread(target, options): hilo de aportes de cada objetivo. Lo pasan PatientDetail y el tablero.
+export default function Evolution({ patient, sessions = [], readOnly = false, renderThread }) {
   const objectives = useMemo(
     () => getObjectives(patient, sessions),
     [patient.plan, sessions]
@@ -213,8 +216,9 @@ export default function Evolution({ patient, sessions = [] }) {
         </h3>
 
         <p className="mx-auto mt-2 max-w-lg text-sm text-text-secondary">
-          Cuando registres encuentros y valores los objetivos trabajados,
-          vas a poder consultar acá cómo fue el desempeño observado en cada uno.
+          {readOnly
+            ? "Cuando el acompañante registre encuentros y valore los objetivos trabajados, vas a poder ver acá cómo avanza cada uno."
+            : "Cuando registres encuentros y valores los objetivos trabajados, vas a poder consultar acá cómo fue el desempeño observado en cada uno."}
         </p>
       </div>
     );
@@ -344,7 +348,7 @@ export default function Evolution({ patient, sessions = [] }) {
 
         {/* ÁREA DEL GRÁFICO */}
         {visibleObjectives.length === 0 ? (
-          <div className="flex h-[300px] flex-col items-center justify-center rounded-lg border border-dashed border-border px-4 text-center">
+          <div className="flex h-75 flex-col items-center justify-center rounded-lg border border-dashed border-border px-4 text-center">
             <p className="font-medium">
               No hay objetivos seleccionados
             </p>
@@ -354,7 +358,7 @@ export default function Evolution({ patient, sessions = [] }) {
           </div>
         ) : (
           <>
-            <div className="h-[340px] w-full">
+            <div className="h-85 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={records}
@@ -455,7 +459,7 @@ export default function Evolution({ patient, sessions = [] }) {
                           LINE_COLORS[index % LINE_COLORS.length],
                       }}
                     />
-                    <span className="break-words">{objective.text}</span>
+                    <span className="wrap-break-word">{objective.text}</span>
                   </div>
                 );
               })}
@@ -515,6 +519,12 @@ export default function Evolution({ patient, sessions = [] }) {
                 <p className="mt-2 text-sm text-text-muted">
                   Este objetivo todavía no fue valorado en ningún encuentro.
                 </p>
+              )}
+
+              {renderThread && (
+                <div className="mt-3">
+                  {renderThread(goalTarget(objective), { collapsible: true })}
+                </div>
               )}
             </li>
           ))}

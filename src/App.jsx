@@ -18,9 +18,12 @@ import Calendar from './Pages/Calendar/Calendar';
 import Unauthorized from './Pages/Unauthorized/Unauthorized';
 import NotFound from './Pages/404/404';
 import { ROLES } from './utils/constants';
-import PatientDetail from "./Pages/AT/PatientDetail/PatientDetail";
+import PatientDetail from "./pages/AT/PatientDetail/PatientDetail";
 import Patients from "./Pages/Patients/Patients";
 import InviteAccept from './pages/IniviteAccept/InviteAccept';
+import BoardPreview from './pages/AT/BoardPreview/BoardPreview';
+import NetworkHome from './pages/Network/NetworkHome';
+import NetworkBoard from './pages/Network/NetworkBoard';
 
 export default function App () {
   return (
@@ -62,6 +65,14 @@ export default function App () {
                 <Route path='/dashboardAT' element={<Dashboard/>}/>
                 <Route path='/linkRequests' element={<LinkRequests/>}/>
                 <Route path='/patient/:id' element={<PatientDetail/>}/>
+                {/* Vista previa del tablero tal como lo ve un integrante de la red */}
+                <Route path='/patient/:id/red/:memberId' element={<BoardPreview/>}/>
+              </Route>
+
+              {/* Solo SUPPORT: integrantes de la red de apoyo */}
+              <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPPORT]}/>}>
+                <Route path='/red' element={<NetworkHome/>}/>
+                <Route path='/red/:patientId' element={<NetworkBoard/>}/>
               </Route>
 
               {/* Solo ADMIN */}

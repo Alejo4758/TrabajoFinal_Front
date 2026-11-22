@@ -50,13 +50,16 @@ export const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-
 export const ROLES = {
   CLIENT: "CLIENT",
   AT: "AT",
-  ADMIN: "ADMIN"
+  ADMIN: "ADMIN",
+  // Integrante de la red de apoyo (familiar, docente, profesional). Se crea al aceptar una invitación
+  SUPPORT: "SUPPORT"
 };
 
 export const ROLE_ROUTES = {
   CLIENT: "/searchAT",
   AT: "/dashboardAT",
-  ADMIN: "/panelAdmin"
+  ADMIN: "/panelAdmin",
+  SUPPORT: "/red"
 };
 
 // Enlaces de navegación y roles que pueden verlos. Tienen que coincidir con los roles de cada ruta en App.jsx.
@@ -67,6 +70,7 @@ export const NAV_LINKS = [
   { to: "/dashboardAT", label: "Mi panel", icon: "home", roles: [ROLES.AT] },
   { to: "/linkRequests", label: "Solicitudes", icon: "users", roles: [ROLES.AT] },
   { to: "/panelAdmin", label: "Administración", icon: "shield", roles: [ROLES.ADMIN] },
+  { to: "/red", label: "Mis acompañamientos", icon: "users", roles: [ROLES.SUPPORT] },
   { to: "/calendario", label: "Agenda", icon: "calendar", roles: [ROLES.CLIENT, ROLES.AT] },
   { to: "/chat", label: "Mensajes", icon: "chat", roles: [ROLES.CLIENT, ROLES.AT, ROLES.ADMIN] }
 ];
@@ -100,7 +104,8 @@ export const PROFILE_FIELD_LABELS = {
 export const ROLE_LABELS = {
   CLIENT: "Solicitante",
   AT: "Acompañante terapéutico",
-  ADMIN: "Administrador"
+  ADMIN: "Administrador",
+  SUPPORT: "Red de apoyo"
 };
 
 // Vínculo del titular de la cuenta con la persona acompañada (enum PatientRelationship del backend): "soy su ..."
