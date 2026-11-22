@@ -20,6 +20,7 @@ import NotFound from './Pages/404/404';
 import { ROLES } from './utils/constants';
 import PatientDetail from "./Pages/AT/PatientDetail/PatientDetail";
 import Patients from "./Pages/Patients/Patients";
+import InviteAccept from './pages/IniviteAccept/InviteAccept';
 
 export default function App () {
   return (
@@ -29,6 +30,7 @@ export default function App () {
           {/* Públicas */}
           <Route path='/' element={<Home/>}/>
           <Route path='/unauthorized' element={<Unauthorized/>}/>
+          <Route path='/invitacion/:token' element={<InviteAccept/>}/>
 
           {/* Solo visitantes: con sesión iniciada redirigen al inicio del rol */}
           <Route element={<GuestRoute/>}>
