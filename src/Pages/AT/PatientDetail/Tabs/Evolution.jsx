@@ -432,7 +432,7 @@ export default function Evolution({ patient, sessions = [], readOnly = false, re
                           r: 7,
                           strokeWidth: 2,
                         }}
-                        connectNulls={false}
+                        connectNulls
                         isAnimationActive={false}
                       />
                     );
