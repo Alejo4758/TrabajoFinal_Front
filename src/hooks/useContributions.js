@@ -37,18 +37,14 @@ export function useContributions(patientId, viewer, service = defaultService) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId, viewer?.key, service]);
 
+  // Otro hilo de la misma página publicó, editó u ocultó un aporte: se recarga la lista desde el backend
   useEffect(() => {
     const onChange = (event) => {
-      if (event.type === "storage" && event.key !== "redat_mock_contributions") return;
       if (event.detail?.patientId && event.detail.patientId !== String(patientId)) return;
       load({ silent: true });
     };
     window.addEventListener(service.CHANGE_EVENT ?? "redat:contributions", onChange);
-    window.addEventListener("storage", onChange);
-    return () => {
-      window.removeEventListener(service.CHANGE_EVENT ?? "redat:contributions", onChange);
-      window.removeEventListener("storage", onChange);
-    };
+    return () => window.removeEventListener(service.CHANGE_EVENT ?? "redat:contributions", onChange);
   }, [load, patientId, service]);
 
   const forTarget = useCallback((target) => items.filter((item) => sameTarget(item.target, target)), [items]);

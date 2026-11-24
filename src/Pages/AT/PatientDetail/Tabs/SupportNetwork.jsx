@@ -61,7 +61,7 @@ function MemberCard({ member, busy, boardHref, onAccess, onRemove, onCopy, onRes
           )}
           {status === 'pending' && (
             <>
-              <button type="button" disabled={busy} onClick={() => onCopy(member)} aria-label={`Copiar el enlace de la invitación de ${displayName}`} className={smallButton}>Copiar enlace</button>
+              <button type="button" disabled={busy} onClick={() => onCopy(member)} aria-label={`Copiar el enlace de la invitación de ${displayName}`} className={smallButton}>{member.token ? 'Copiar enlace' : 'Generar enlace'}</button>
               <button type="button" disabled={busy} onClick={() => onResend(member)} aria-label={`Reenviar la invitación a ${displayName}`} className={smallButton}>{busy ? 'Reenviando...' : 'Reenviar'}</button>
               <button type="button" disabled={busy} onClick={(e) => onCancel(member, e.currentTarget)} aria-label={`Cancelar la invitación de ${displayName}`} className={`${smallButton} text-red-600 hover:bg-red-50`}>Cancelar invitación</button>
             </>
@@ -200,19 +200,43 @@ export default function SupportNetwork({ patient, service = defaultService }) {
   const replace = (member) => setMembers((prev) => prev.map((m) => (m.id === member.id ? member : m)));
   const remove = (member) => setMembers((prev) => prev.filter((m) => m.id !== member.id));
 
+  // Si el correo no salió, la invitación igual existe: se ofrece el enlace para compartirlo a mano
+  const sentNotice = (member, text) =>
+    member.emailSent === false
+      ? { text: `No pudimos enviar el correo a ${member.email}. Copiá el enlace y compartíselo vos:`, link: inviteLink(member.token), manual: true }
+      : { text, link: inviteLink(member.token) };
+
   const handleInvited = (member) => {
     setMembers((prev) => [...prev, member]);
-    setNotice({ text: `Invitación enviada a ${member.email}.`, link: inviteLink(member.token) });
+    setNotice(sentNotice(member, `Invitación enviada a ${member.email}.`));
   };
 
-  const copyLink = async (member) => {
-    const link = inviteLink(member.token);
-    setActionError('');
+  const writeLink = async (link, text) => {
     try {
       await navigator.clipboard.writeText(link);
-      setNotice({ text: 'Enlace copiado. Podés pegarlo en un mensaje para compartirlo.' });
+      setNotice({ text });
     } catch {
       setNotice({ text: 'No pudimos copiar el enlace automáticamente. Copialo desde acá:', link, manual: true });
+    }
+  };
+
+  // El backend guarda solo el hash del token: de una invitación del listado no se conoce el enlace.
+  // En ese caso se genera uno nuevo (reenviándola) y se copia ese
+  const copyLink = async (member) => {
+    setActionError('');
+    if (member.token) {
+      await writeLink(inviteLink(member.token), 'Enlace copiado. Podés pegarlo en un mensaje para compartirlo.');
+      return;
+    }
+    setBusyId(member.id);
+    try {
+      const updated = await service.resendInvitation(patientId, member.id);
+      replace(updated);
+      await writeLink(inviteLink(updated.token), 'Generamos un enlace nuevo y lo copiamos (el anterior dejó de servir). Podés pegarlo en un mensaje para compartirlo.');
+    } catch (err) {
+      setActionError(err.message || 'No pudimos generar el enlace.');
+    } finally {
+      setBusyId(null);
     }
   };
 
@@ -223,7 +247,7 @@ export default function SupportNetwork({ patient, service = defaultService }) {
     try {
       const updated = await service.resendInvitation(patientId, member.id);
       replace(updated);
-      setNotice({ text: `Invitación enviada de nuevo a ${updated.email}. El enlace anterior dejó de servir.`, link: inviteLink(updated.token) });
+      setNotice(sentNotice(updated, `Invitación enviada de nuevo a ${updated.email}. El enlace anterior dejó de servir.`));
     } catch (err) {
       setActionError(err.message || 'No pudimos reenviar la invitación.');
     } finally {
@@ -276,7 +300,7 @@ export default function SupportNetwork({ patient, service = defaultService }) {
             <input readOnly value={notice.link} aria-label="Enlace de la invitación" onFocus={(e) => e.target.select()} className="mt-3 w-full rounded-md border border-border bg-surface px-3 py-2 text-xs" />
           )}
           {notice.link && !notice.manual && (
-            <button type="button" onClick={() => copyLink({ token: notice.link.split('/').pop() })} className="mt-2 cursor-pointer text-sm font-semibold text-primary hover:underline">Copiar enlace</button>
+            <button type="button" onClick={() => writeLink(notice.link, 'Enlace copiado. Podés pegarlo en un mensaje para compartirlo.')} className="mt-2 cursor-pointer text-sm font-semibold text-primary hover:underline">Copiar enlace</button>
           )}
         </div>
       )}

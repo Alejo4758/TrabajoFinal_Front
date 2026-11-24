@@ -1,9 +1,30 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import FormField from "../../components/FormField/FormField";
 import Icon from "../../components/Icon/Icon";
+import { useAuth } from "../../hooks/useAuth";
 import { NETWORK_ROLES, accessLabels, roleInfo, validateAccept } from "../../utils/networkModel";
 import { acceptInvitation, getInvitation } from "../../services/networkService";
+
+const LOGIN_BUTTON = "mt-6 inline-block rounded-xl bg-primary px-6 py-3 font-semibold text-white transition hover:bg-primary-hover";
+
+// La página de login es solo para visitantes: con otra sesión abierta en el navegador (por ejemplo la del AT que
+// mandó la invitación) redirige a esa cuenta. Por eso, si hay una sesión, primero se cierra
+function LoginButton () {
+    const { user, isAuthenticated, logout } = useAuth ();
+    const navigate = useNavigate ();
+
+    if (!isAuthenticated) return <Link to="/login" className={LOGIN_BUTTON}>Iniciar sesión</Link>;
+
+    return (
+        <>
+            <p className="m-0 mt-4 text-sm text-text-muted">En este navegador está abierta la sesión de {user?.email || "otra cuenta"}.</p>
+            <button type="button" onClick={() => { logout (); navigate ("/login"); }} className={`cursor-pointer ${LOGIN_BUTTON}`}>
+                Cerrar esa sesión e iniciar sesión
+            </button>
+        </>
+    );
+}
 
 /* Logo: tres nodos conectados */
 function BrandMark ({ className = "h-11 w-11" }) {
@@ -19,11 +40,17 @@ function BrandMark ({ className = "h-11 w-11" }) {
     )
 }
 
+// text puede depender del error: el backend manda details.atName con la invitación vencida
 const ERROR_COPY = {
-    not_found: { title: "Este enlace no es válido", text: "Revisá que el enlace esté completo o pedí que te envíen una invitación nueva.", login: false },
-    expired: { title: "La invitación venció", text: "Las invitaciones duran 7 días. Pedile a quien te invitó que te envíe una nueva.", login: false },
-    used: { title: "Esta invitación ya fue utilizada", text: "Si ya creaste tu cuenta, iniciá sesión para continuar.", login: true },
+    not_found: { title: "Este enlace no es válido", text: () => "Revisá que el enlace esté completo o pedí que te envíen una invitación nueva.", login: false },
+    expired: { title: "La invitación venció", text: ({ details }) => `Las invitaciones duran 7 días. Pedile a ${details?.atName || "quien te invitó"} que te envíe una nueva.`, login: false },
+    used: { title: "Esta invitación ya fue utilizada", text: () => "Si ya creaste tu cuenta, iniciá sesión para continuar.", login: true },
+    email_taken: { title: "Ya existe una cuenta con este correo", text: () => "Iniciá sesión con esa cuenta. Si no recordás la contraseña, pedile ayuda a quien te invitó.", login: true },
+    // Sin conexión, demasiados pedidos o un error del servidor: no dice nada sobre el enlace
+    unavailable: { title: "No pudimos verificar tu invitación", text: ({ message }) => message || "Intentá nuevamente en unos minutos.", login: false },
 };
+
+const errorState = err => ({ status: "error", code: err.code in ERROR_COPY ? err.code : "unavailable", message: err.message, details: err.details });
 
 const EMPTY_FORM = { name: "", lastName: "", password: "", confirmPassword: "", role: "", relationship: "", consent: false };
 
@@ -51,7 +78,7 @@ export default function InviteAccept () {
                 setForm ({ ...EMPTY_FORM, name: firstName, lastName: rest.join (" "), role: data.role, relationship: data.relationship || "" });
                 setState ({ status: "ready" });
             } catch (err) {
-                if (!cancelled) setState ({ status: "error", code: err.code in ERROR_COPY ? err.code : "not_found", message: err.message });
+                if (!cancelled) setState (errorState (err));
             }
         };
         load ();
@@ -81,7 +108,9 @@ export default function InviteAccept () {
             await acceptInvitation (token, { name: form.name.trim (), lastName: form.lastName.trim (), password: form.password, role: form.role, relationship: form.relationship.trim () });
             setState ({ status: "done" });
         } catch (err) {
-            if (err.code in ERROR_COPY) setState ({ status: "error", code: err.code, message: err.message });
+            // Problemas con el enlace o la cuenta van a la pantalla de error; el resto (datos inválidos, sin conexión,
+            // demasiados pedidos) se muestra en el formulario para poder reintentar
+            if (err.code in ERROR_COPY && err.code !== "unavailable") setState (errorState (err));
             else setServerError (err.message || "No pudimos crear tu cuenta. Intentá nuevamente.");
         } finally {
             setSending (false);
@@ -112,9 +141,9 @@ export default function InviteAccept () {
                         {state.status === "error" && (
                             <div role="alert" className="rounded-3xl border border-border bg-surface p-8 text-center shadow-xl shadow-primary/5">
                                 <h1 className="m-0 text-2xl font-bold text-text">{ERROR_COPY[state.code].title}</h1>
-                                <p className="m-0 mt-3 text-text-secondary">{ERROR_COPY[state.code].text}</p>
+                                <p className="m-0 mt-3 text-text-secondary">{ERROR_COPY[state.code].text (state)}</p>
                                 {ERROR_COPY[state.code].login && (
-                                    <Link to="/login" className="mt-6 inline-block rounded-xl bg-primary px-6 py-3 font-semibold text-white transition hover:bg-primary-hover">Iniciar sesión</Link>
+                                    <LoginButton/>
                                 )}
                             </div>
                         )}
@@ -126,7 +155,7 @@ export default function InviteAccept () {
                                 </div>
                                 <h1 className="m-0 text-2xl font-bold text-text">Tu cuenta fue creada</h1>
                                 <p className="m-0 mt-3 text-text-secondary">Ya formás parte de la red de apoyo de {invitation?.patientFirstName}. Iniciá sesión con {invitation?.email} para continuar.</p>
-                                <Link to="/login" className="mt-6 inline-block rounded-xl bg-primary px-6 py-3 font-semibold text-white transition hover:bg-primary-hover">Iniciar sesión</Link>
+                                <LoginButton/>
                             </div>
                         )}
 

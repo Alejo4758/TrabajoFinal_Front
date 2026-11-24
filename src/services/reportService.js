@@ -67,8 +67,19 @@ const fromApiReport = report => ({
   updatedAt: report.updatedAt,
 });
 
-// Informe del front con la forma que valida el backend
-const toApiReport = ({ title, audience, from, to, html }) => ({ title, audience, periodFrom: from, periodTo: to, content: html });
+// Estados de un informe. Uno finalizado ya no se puede modificar y se comparte con la red de apoyo
+// (integrantes con acceso a Informes)
+export const REPORT_STATUS = { DRAFT: "DRAFT", FINAL: "FINAL" };
+
+// Informe del front con la forma que valida el backend. Sin status, el backend lo guarda como borrador
+const toApiReport = ({ title, audience, from, to, html, status }) => ({
+  title,
+  audience,
+  periodFrom: from,
+  periodTo: to,
+  content: html,
+  ...(status ? { status } : {}),
+});
 
 const mapData = (result, map) => (result.data ? { ...result, data: map (result.data) } : result);
 
@@ -473,7 +484,8 @@ export async function getPatientReports (patientId, { token, signal } = {}) {
   return { data: [...(memoryStore.get (String (patientId)) ?? [])].sort (byUpdatedDesc), error: null };
 }
 
-// Crea el informe o, si trae id, lo actualiza. reportPayload = { id?, title, audience, from, to, html }. Devuelve el informe guardado
+// Crea el informe o, si trae id, lo actualiza. reportPayload = { id?, title, audience, from, to, html, status? }.
+// Con status FINAL se guarda y se finaliza en el mismo pedido (queda compartido con la red). Devuelve el informe guardado
 export async function savePatientReport (patientId, reportPayload, { token } = {}) {
   if (!patientId) return { data: null, error: "No se pudo identificar al paciente." };
 
@@ -483,6 +495,7 @@ export async function savePatientReport (patientId, reportPayload, { token } = {
     from: reportPayload.from,
     to: reportPayload.to,
     html: reportPayload.html ?? "",
+    status: reportPayload.status === REPORT_STATUS.FINAL ? REPORT_STATUS.FINAL : undefined,
   };
 
   if (!payload.title) return { data: null, error: "Poné un título al informe." };
