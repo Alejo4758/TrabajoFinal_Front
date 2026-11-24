@@ -5,10 +5,53 @@ import { useContributions } from "../../hooks/useContributions";
 import Contributions from "../../components/AT/Contributions/Contributions";
 import { BOARD_TABS, TARGET_TYPES, formatWhen, planTarget, sessionLabel } from "../../utils/boardModel";
 import { accessLabels, roleLabel } from "../../utils/networkModel";
+import * as defaultContributionService from "../../services/contributonService";
+import { ReportDocumentContent } from "../../components/AT/ReportEditor/PrintableReport";
+import { periodLabel } from "../../utils/reportModel";
 
 import Encounters from "../AT/PatientDetail/Tabs/Encounters";
 import Evolution from "../AT/PatientDetail/Tabs/Evolution";
 import BoardPlan from "./BoardPlan";
+
+// Informes finalizados que el acompañante comparte con la red (vienen del backend solo con el acceso "reports").
+// Cada uno se despliega con el mismo formato que la vista de impresión del AT
+function BoardReports({ reports, patient, atName }) {
+  if (reports.length === 0) {
+    return (
+      <div className="rounded-xl border border-border bg-surface px-6 py-12 text-center">
+        <h3 className="m-0 text-lg font-semibold">Todavía no hay informes</h3>
+        <p className="mx-auto m-0 mt-2 max-w-lg text-sm text-text-secondary">
+          Cuando el acompañante publique los informes del período, vas a poder leerlos acá.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <ul className="m-0 list-none space-y-4 p-0">
+      {reports.map((report) => (
+        <li key={report.id}>
+          <details className="group rounded-xl border border-border bg-surface">
+            <summary className="cursor-pointer list-none p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30">
+              <p className="m-0 font-semibold text-text">{report.title}</p>
+              <p className="m-0 mt-1 text-sm text-text-secondary">
+                Período: {periodLabel(report.periodFrom, report.periodTo)}
+                <span className="ml-2 text-primary group-open:hidden">Leer informe</span>
+              </p>
+            </summary>
+            <div className="border-t border-border p-5 sm:p-8">
+              <ReportDocumentContent
+                report={{ title: report.title, html: report.content, audience: report.audience, from: report.periodFrom, to: report.periodTo }}
+                patient={patient}
+                authorName={atName}
+              />
+            </div>
+          </details>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 const BOARD_TAB_OF = { plan: "plan", session: "encuentros", goal: "evolucion" };
 
@@ -88,13 +131,14 @@ function Activity({ sessions, canSeeSessions, contributions, patientName }) {
   );
 }
 
-// data = { patient: { id, name }, atName, member: { name, role, relationship, access }, plan, sessions }
-export default function SupportBoard({ data, viewer, canPost = true, banner = null, backLink = null }) {
+// data = { patient: { id, name }, atName, member: { name, role, relationship, access }, plan, sessions, reports }
+// contributionService: para la vista previa del AT, que filtra los aportes como los vería el integrante
+export default function SupportBoard({ data, viewer, canPost = true, banner = null, backLink = null, contributionService = defaultContributionService }) {
   const [searchParams] = useSearchParams();
-  const { patient, atName, member, plan, sessions = [] } = data;
+  const { patient, atName, member, plan, sessions = [], reports = [] } = data;
   const access = member.access ?? [];
 
-  const contributions = useContributions(patient.id, viewer);
+  const contributions = useContributions(patient.id, viewer, contributionService);
 
   const tabs = BOARD_TABS.filter((tab) => !tab.section || access.includes(tab.section));
   const activeTab = tabs.find((tab) => tab.id === searchParams.get("seccion")) ?? tabs[0];
@@ -182,14 +226,7 @@ export default function SupportBoard({ data, viewer, canPost = true, banner = nu
           <Evolution patient={patientForTabs} sessions={sessions} readOnly renderThread={renderThread} />
         )}
 
-        {activeTab.id === "informes" && (
-          <div className="rounded-xl border border-border bg-surface px-6 py-12 text-center">
-            <h3 className="m-0 text-lg font-semibold">Todavía no hay informes</h3>
-            <p className="mx-auto m-0 mt-2 max-w-lg text-sm text-text-secondary">
-              Cuando el acompañante publique los informes del período, vas a poder leerlos acá.
-            </p>
-          </div>
-        )}
+        {activeTab.id === "informes" && <BoardReports reports={reports} patient={patient} atName={atName} />}
       </section>
     </main>
   );
