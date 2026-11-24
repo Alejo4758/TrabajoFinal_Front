@@ -110,9 +110,8 @@ const toPatientDetail = (data, sessions) => {
     plan: data.plan ?? null,
     // Encuentros registrados (la pestaña Evolución se arma con estos mismos datos)
     sessions,
-    // Red de apoyo e informes todavía no tienen backend: van vacíos hasta que existan
+    // La red de apoyo la carga su pestaña (networkService) y los informes, reportService: acá van vacíos
     objectives: [],
-    supportNetwork: [],
     reports: [],
   };
 };
