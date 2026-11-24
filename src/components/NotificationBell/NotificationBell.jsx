@@ -11,6 +11,10 @@ const TYPE_ICONS = {
     INTERVIEW_REQUEST: "calendar",
     INTERVIEW_STATUS: "calendar",
     PROFILE_VALIDATED: "shield",
+    ACTIVITY_REMINDER: "clock",
+    NETWORK_INVITE_ACCEPTED: "users",
+    NETWORK_CONTRIBUTION: "chat",
+    NETWORK_REPORT_SHARED: "plan",
 };
 
 export default function NotificationBell () {
