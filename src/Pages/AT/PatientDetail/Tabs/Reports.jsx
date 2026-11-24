@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
 
 import { useAuth } from "../../../../hooks/useAuth";
-import { generateReportDraft, getPatientReports, refineReportDraft, savePatientReport } from "../../../../services/reportService";
+import { REPORT_STATUS, generateReportDraft, getPatientReports, refineReportDraft, savePatientReport } from "../../../../services/reportService";
 import { AUDIENCES, audienceInfo, buildFormalHeader, buildSignatureBlock, currentMonthRange, isHtmlEmpty, periodLabel, suggestedTitle } from "../../../../utils/reportModel";
 import { newId } from "../../../../utils/planModel";
 import { fullName } from "../../../../utils/utils";
@@ -30,7 +30,9 @@ const formatTime = iso => new Date (iso).toLocaleTimeString ("es-AR", { hour: "2
 
 const formatDateTime = iso => new Date (iso).toLocaleString ("es-AR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
-const emptyDocument = () => ({ id: null, title: "", titleTouched: false, html: "", savedAt: null });
+const emptyDocument = () => ({ id: null, title: "", titleTouched: false, html: "", savedAt: null, status: REPORT_STATUS.DRAFT });
+
+const isFinalReport = report => report?.status === REPORT_STATUS.FINAL;
 
 // ---------- Piezas de la vista ----------
 
@@ -127,7 +129,8 @@ function AudiencePicker ({ value, onChange }) {
   );
 }
 
-function StatusBadge ({ dirty, savedAt, isNew }) {
+function StatusBadge ({ dirty, savedAt, isNew, final }) {
+  if (final) return <Pill tone="success">Finalizado · compartido con la red</Pill>;
   if (dirty) return <Pill tone="warning">Borrador sin guardar</Pill>;
   if (savedAt) return <Pill tone="success">Guardado · {formatTime (savedAt)}</Pill>;
   return <Pill tone="neutral">{isNew ? "Nuevo informe" : "Sin cambios"}</Pill>;
@@ -160,6 +163,9 @@ function SavedReports ({ reports, loading, error, openId, onOpen, onDownload }) 
               <li key={report.id} aria-current={open ? "true" : undefined} className={`rounded-lg border p-4 transition ${open ? "border-primary/50 bg-primary-light/30" : "border-border bg-background"}`}>
                 <div className="flex flex-wrap items-center gap-2">
                   <Pill tone={audience.tone}>{audience.short}</Pill>
+                  {isFinalReport (report)
+                    ? <Pill tone="success">Compartido con la red</Pill>
+                    : <Pill tone="neutral">Borrador</Pill>}
                   {open && <span className="text-xs font-medium text-primary">Abierto en el editor</span>}
                 </div>
                 <p className="mt-2 break-words font-semibold leading-snug text-text">{report.title}</p>
@@ -170,8 +176,8 @@ function SavedReports ({ reports, loading, error, openId, onOpen, onDownload }) 
                   Guardado el {formatDateTime (report.updatedAt)}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <ActionButton variant="secondary" onClick={() => onOpen (report)} disabled={open} aria-label={`Abrir o editar ${report.title}`}>
-                    Abrir / Editar
+                  <ActionButton variant="secondary" onClick={() => onOpen (report)} disabled={open} aria-label={`${isFinalReport (report) ? "Ver" : "Abrir o editar"} ${report.title}`}>
+                    {isFinalReport (report) ? "Ver" : "Abrir / Editar"}
                   </ActionButton>
                   <ActionButton variant="secondary" onClick={() => onDownload (report)} aria-label={`Descargar en PDF ${report.title}`}>
                     Descargar PDF
@@ -231,6 +237,8 @@ export default function Reports ({ patient }) {
   // El título sugerido sigue al destinatario y al período hasta que el AT lo escribe a mano
   const title = doc.titleTouched ? doc.title : suggestedTitle (settings.audience, settings.from, settings.to);
   const hasContent = !isHtmlEmpty (doc.html);
+  // Un informe finalizado ya se compartió con la red: se puede ver y exportar, pero no modificar
+  const isFinal = isFinalReport (doc);
   const rangeError = settings.from && settings.to && settings.from > settings.to ? "«Desde» no puede ser posterior a «Hasta»." : "";
 
   const sessionsInRange = useMemo (
@@ -289,7 +297,7 @@ export default function Reports ({ patient }) {
 
   const updateSettings = changes => {
     setSettings (previous => ({ ...previous, ...changes }));
-    if (doc.id || hasContent) setDirty (true);
+    if (!isFinal && (doc.id || hasContent)) setDirty (true);
   };
 
   const handleHtmlChange = html => {
@@ -341,12 +349,17 @@ export default function Reports ({ patient }) {
   const handleNew = () => confirmDiscard (resetDocument, "Si empezás un informe nuevo se pierden las ediciones que no guardaste.");
 
   const openReport = report => {
-    setDoc ({ id: report.id, title: report.title, titleTouched: true, html: report.html, savedAt: report.updatedAt });
+    setDoc ({ id: report.id, title: report.title, titleTouched: true, html: report.html, savedAt: report.updatedAt, status: report.status ?? REPORT_STATUS.DRAFT });
     setSettings ({ audience: report.audience, from: report.from, to: report.to });
     setDirty (false);
     setSaveError ("");
     resetChat ();
-    setNotice ({ tone: "info", text: `Abriste «${report.title}». Los cambios se guardan sobre este mismo informe.` });
+    setNotice ({
+      tone: "info",
+      text: isFinalReport (report)
+        ? `Abriste «${report.title}». Está finalizado y compartido con la red de apoyo: se puede ver y exportar, pero no modificar.`
+        : `Abriste «${report.title}». Los cambios se guardan sobre este mismo informe.`,
+    });
     scrollToStudio ();
   };
 
@@ -371,6 +384,7 @@ export default function Reports ({ patient }) {
   };
 
   const handleGenerate = async () => {
+    if (isFinal) return;
     if (rangeError) {
       setGenerateError (rangeError);
       return;
@@ -484,7 +498,9 @@ export default function Reports ({ patient }) {
   const chatMessages = chat.map (message => (message === lastChange ? { ...message, canUndo: doc.html === message.change.after } : message));
 
   // Con el editor vacío también se puede chatear: la IA redacta el informe siguiendo las instrucciones
-  const chatDisabledReason = rangeError || (generating ? "Esperá a que termine de generarse el borrador." : "");
+  const chatDisabledReason = isFinal
+    ? "El informe está finalizado y no se puede modificar. Empezá uno nuevo para seguir trabajando con la IA."
+    : rangeError || (generating ? "Esperá a que termine de generarse el borrador." : "");
 
   const handleTabKeyDown = event => {
     if (!["ArrowLeft", "ArrowRight"].includes (event.key)) return;
@@ -496,33 +512,69 @@ export default function Reports ({ patient }) {
 
   // ---------- Guardar y exportar ----------
 
-  const handleSave = async () => {
+  // Revisa lo que hace falta para guardar o finalizar. Devuelve true si se puede seguir
+  const canSave = () => {
+    if (isFinal) return false;
     if (!title.trim ()) {
       setSaveError ("Poné un título al informe antes de guardarlo.");
       titleInputRef.current?.focus ();
-      return;
+      return false;
     }
     if (!hasContent) {
       setSaveError ("El informe está vacío: escribí el contenido o generá un borrador.");
-      return;
+      return false;
     }
+    return true;
+  };
 
+  // Guarda el informe del editor. Con status FINAL lo finaliza en el mismo pedido (con los cambios sin guardar incluidos)
+  const saveReport = async status => {
     setSaving (true);
     setSaveError ("");
 
-    const { data, error } = await savePatientReport (patient.id, { id: doc.id, title, ...settings, html: doc.html }, { token });
+    const { data, error } = await savePatientReport (patient.id, { id: doc.id, title, ...settings, html: doc.html, status }, { token });
 
     setSaving (false);
 
     if (error) {
       setSaveError (error);
-      return;
+      return null;
     }
 
-    setDoc (previous => ({ ...previous, id: data.id, title: data.title, titleTouched: true, savedAt: data.updatedAt }));
+    setDoc (previous => ({ ...previous, id: data.id, title: data.title, titleTouched: true, savedAt: data.updatedAt, status: data.status ?? previous.status }));
     setDirty (false);
     setReports (previous => [data, ...previous.filter (report => report.id !== data.id)]);
-    setNotice ({ tone: "success", text: `«${data.title}» quedó guardado en el historial del paciente.` });
+    return data;
+  };
+
+  const handleSave = async () => {
+    if (!canSave ()) return;
+    const data = await saveReport ();
+    if (data) setNotice ({ tone: "success", text: `«${data.title}» quedó guardado en el historial del paciente.` });
+  };
+
+  const finalize = async () => {
+    setDialog (null);
+    resetChat ();
+    const data = await saveReport (REPORT_STATUS.FINAL);
+    if (data) {
+      setNotice ({
+        tone: "success",
+        text: `«${data.title}» quedó finalizado y compartido. Lo ven los integrantes de la red de apoyo que tienen acceso a Informes, y les llega un aviso.`,
+      });
+    }
+  };
+
+  const handleFinalize = () => {
+    if (!canSave ()) return;
+    setDialog ({
+      title: "Finalizar y compartir el informe",
+      text: "Un informe finalizado ya no se puede modificar. Lo van a poder leer los integrantes de la red de apoyo que tienen acceso a Informes, sin importar a quién esté dirigido. Revisá el contenido antes de continuar.",
+      actions: [
+        { label: "Cancelar", onClick: () => setDialog (null) },
+        { label: "Finalizar y compartir", variant: "primary", onClick: finalize },
+      ],
+    });
   };
 
   const handleExport = () => {
@@ -633,7 +685,8 @@ export default function Reports ({ patient }) {
               <button
                 type="button"
                 onClick={handleGenerate}
-                disabled={generating || chatSending || Boolean (rangeError)}
+                disabled={isFinal || generating || chatSending || Boolean (rangeError)}
+                title={isFinal ? "El informe abierto está finalizado: empezá uno nuevo para generar un borrador." : undefined}
                 aria-busy={generating}
                 className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-60"
               >
@@ -652,11 +705,11 @@ export default function Reports ({ patient }) {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="min-w-0 flex-1">
               <Field id={ids.title} label="Título del informe">
-                <input ref={titleInputRef} id={ids.title} type="text" value={title} maxLength={160} onChange={handleTitleChange} placeholder="Informe de Evolución - Noviembre 2026 (Obra Social)" className={`${INPUT_CLASS} font-semibold`}/>
+                <input ref={titleInputRef} id={ids.title} type="text" value={title} maxLength={160} onChange={handleTitleChange} readOnly={isFinal} placeholder="Informe de Evolución - Noviembre 2026 (Obra Social)" className={`${INPUT_CLASS} font-semibold read-only:bg-surface-alt`}/>
               </Field>
             </div>
             <div className="flex shrink-0 items-center gap-2 sm:pb-2" aria-live="polite">
-              <StatusBadge dirty={dirty} savedAt={doc.savedAt} isNew={!doc.id && !hasContent}/>
+              <StatusBadge dirty={dirty} savedAt={doc.savedAt} isNew={!doc.id && !hasContent} final={isFinal}/>
             </div>
           </div>
 
@@ -666,14 +719,19 @@ export default function Reports ({ patient }) {
             <span>Período: <span className="font-medium text-text-secondary">{settings.from && settings.to ? periodLabel (settings.from, settings.to) : "sin definir"}</span></span>
           </div>
 
-          {hasContent && (
+          {isFinal ? (
+            <p className="flex items-start gap-2 rounded-lg border border-success/30 bg-success/5 px-3 py-2 text-xs leading-relaxed text-text">
+              <span aria-hidden="true">🔒</span>
+              Este informe está finalizado y lo pueden leer los integrantes de la red de apoyo con acceso a Informes. Ya no se puede modificar: si hace falta corregirlo, empezá un informe nuevo.
+            </p>
+          ) : hasContent && (
             <p className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
               <span aria-hidden="true">⚠️</span>
               Revisá y completá la valoración profesional antes de guardar o exportar. El borrador es una ayuda: la responsabilidad del contenido es del acompañante.
             </p>
           )}
 
-          <ReportEditor id={ids.editor} value={doc.html} onChange={handleHtmlChange} snippets={snippets} label={`Contenido de ${title || "el informe"}`} readOnly={chatSending}/>
+          <ReportEditor id={ids.editor} value={doc.html} onChange={handleHtmlChange} snippets={snippets} label={`Contenido de ${title || "el informe"}`} readOnly={chatSending || isFinal}/>
           {chatSending && <p className="-mt-2 text-xs text-text-muted" aria-live="polite">La IA está editando el informe: el editor se desbloquea cuando termine.</p>}
 
           {saveError && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">{saveError}</p>}
@@ -686,13 +744,22 @@ export default function Reports ({ patient }) {
               <ActionButton variant="secondary" onClick={handleExport} disabled={!hasContent}>
                 Exportar PDF
               </ActionButton>
-              <ActionButton onClick={handleSave} disabled={saving || !hasContent} aria-busy={saving}>
-                {saving ? "Guardando…" : doc.id ? "Guardar cambios" : "Guardar informe"}
-              </ActionButton>
+              {!isFinal && (
+                <>
+                  <ActionButton variant="secondary" onClick={handleSave} disabled={saving || !hasContent} aria-busy={saving}>
+                    {saving ? "Guardando…" : doc.id ? "Guardar cambios" : "Guardar borrador"}
+                  </ActionButton>
+                  <ActionButton onClick={handleFinalize} disabled={saving || !hasContent || chatSending}>
+                    Finalizar y compartir
+                  </ActionButton>
+                </>
+              )}
             </div>
           </div>
           <p className="text-xs text-text-muted">
-            Al exportar se abre el cuadro de impresión: elegí "Guardar como PDF" como destino.
+            {isFinal
+              ? "Al exportar se abre el cuadro de impresión: elegí \"Guardar como PDF\" como destino."
+              : "Guardado como borrador, el informe solo lo ves vos. Al finalizarlo queda compartido con la red de apoyo (integrantes con acceso a Informes) y ya no se puede modificar. Al exportar se abre el cuadro de impresión: elegí \"Guardar como PDF\" como destino."}
           </p>
         </section>
 
